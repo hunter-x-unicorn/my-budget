@@ -40,7 +40,20 @@
 | «Требуется вход» на всех запросах | JWT keys на prod; перелогиниться |
 | Build падает на convex deploy | `CONVEX_DEPLOY_KEY`, доступ к prod project |
 | Типы API не сходятся | `npx convex dev` локально, не править `api.d.ts` вручную |
-| Старые операции не в таблице | Запустить `npx convex run migrations:linkLegacyTransactions` |
+| Старые операции не в таблице | См. миграции ниже |
+| Schema push fails (legacy rows) | Сначала `linkLegacyTransactions`, потом деплой |
+
+### Миграция legacy transactions
+
+Перед деплоем версии с обязательным `categoryId` (без поля `category`):
+
+```bash
+npx convex run migrations:linkLegacyTransactions
+# если skipped > 0 и записи без имени — удалить сироты:
+npx convex run migrations:removeOrphanTransactions
+```
+
+Затем `npx convex deploy` / merge.
 
 ## Ручной deploy
 

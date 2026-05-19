@@ -2,11 +2,16 @@
 
 ## categoryId без денормализованного `category`
 
-**Решение:** в `transactions` хранится только `categoryId`. Имя категории подставляется при чтении (join с `categories`).
+**Решение:** в `transactions` хранится только обязательный `categoryId`. Имя категории — join с `categories` при чтении (`monthBundle`).
 
-**Почему:** при переименовании категории история и аналитика показывали старое имя. Вариант «патчить все transactions при rename» хуже по объёму записей и гонкам.
+**Почему:** при переименовании категории история и аналитика показывали старое имя. Патч всех transactions при rename не нужен.
 
-**Миграция:** internal mutation `linkLegacyTransactions` привязывает старые записи без `categoryId` по паре `type` + имя из поля `category` (legacy). После миграции поле `category` удалено из схемы.
+**Переименование:** `categories.rename` — только таблица `categories`; история подхватывает новое имя через join.
+
+**Миграция prod (до деплоя схемы без `category`):**
+1. `npx convex run migrations:linkLegacyTransactions`
+2. при необходимости `npx convex run migrations:removeOrphanTransactions`
+3. деплой схемы с обязательным `categoryId`
 
 ## month — 0-based (как в JavaScript `Date`)
 

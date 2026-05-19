@@ -10,6 +10,7 @@ function CategorySection({
   type,
   items,
   onAdd,
+  onRename,
   onRemove,
   onMove,
 }: {
@@ -17,6 +18,7 @@ function CategorySection({
   type: TransactionType;
   items: { _id: Id<"categories">; name: string; order: number }[];
   onAdd: (name: string, type: TransactionType) => Promise<void>;
+  onRename: (id: Id<"categories">, name: string) => void;
   onRemove: (id: Id<"categories">) => void;
   onMove: (id: Id<"categories">, direction: "up" | "down") => void;
 }) {
@@ -50,9 +52,21 @@ function CategorySection({
                 ↓
               </button>
             </div>
-            <span className={`category-name category-name--${type}`}>
+            <button
+              type="button"
+              className={`category-name category-name--${type}`}
+              title="Нажмите, чтобы переименовать"
+              onClick={() => {
+                const next = window.prompt("Новое название", cat.name);
+                if (next === null) return;
+                const trimmed = next.trim();
+                if (trimmed && trimmed !== cat.name) {
+                  onRename(cat._id, trimmed);
+                }
+              }}
+            >
               {cat.name}
-            </span>
+            </button>
             <button
               type="button"
               className="category-delete"
@@ -99,6 +113,7 @@ export function AccountScreen() {
   const user = useQuery(api.users.current);
   const categories = useQuery(api.categories.list);
   const createCategory = useMutation(api.categories.create);
+  const renameCategory = useMutation(api.categories.rename);
   const removeCategory = useMutation(api.categories.remove);
   const moveCategory = useMutation(api.categories.move);
 
@@ -110,6 +125,13 @@ export function AccountScreen() {
   const handleAdd = async (name: string, type: TransactionType) => {
     setActionError(null);
     await createCategory({ name, type });
+  };
+
+  const handleRename = (id: Id<"categories">, name: string) => {
+    setActionError(null);
+    void renameCategory({ id, name }).catch((err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Ошибка");
+    });
   };
 
   const handleRemove = (id: Id<"categories">) => {
@@ -144,6 +166,7 @@ export function AccountScreen() {
         type="expense"
         items={expense}
         onAdd={handleAdd}
+        onRename={handleRename}
         onRemove={handleRemove}
         onMove={handleMove}
       />
@@ -153,6 +176,7 @@ export function AccountScreen() {
         type="income"
         items={income}
         onAdd={handleAdd}
+        onRename={handleRename}
         onRemove={handleRemove}
         onMove={handleMove}
       />

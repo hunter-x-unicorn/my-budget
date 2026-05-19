@@ -144,6 +144,46 @@ export const create = mutation({
   },
 });
 
+export const rename = mutation({
+  args: {
+    id: v.id("categories"),
+    name: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { id, name }) => {
+    const userId = await requireUserId(ctx);
+    const category = await ctx.db.get(id);
+    if (category === null || category.userId !== userId) {
+      throw new ConvexError("Категория не найдена");
+    }
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      throw new ConvexError("Введите название категории");
+    }
+    if (trimmed.length > 40) {
+      throw new ConvexError("Слишком длинное название");
+    }
+
+    const siblings = await ctx.db
+      .query("categories")
+      .withIndex("by_user_type", (q) =>
+        q.eq("userId", userId).eq("type", category.type),
+      )
+      .collect();
+
+    const duplicate = siblings.some(
+      (c) => c._id !== id && c.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (duplicate) {
+      throw new ConvexError("Такая категория уже есть");
+    }
+
+    await ctx.db.patch(id, { name: trimmed });
+    return null;
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("categories") },
   returns: v.null(),
@@ -154,7 +194,7 @@ export const remove = mutation({
       throw new ConvexError("Категория не найдена");
     }
 
-    if (await categoryHasTransactions(ctx, userId, category)) {
+    if (await categoryHasTransactions(ctx, category)) {
       throw new ConvexError(
         "Нельзя удалить: есть операции в этой категории",
       );

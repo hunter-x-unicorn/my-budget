@@ -27,10 +27,7 @@ const schema = defineSchema({
     userId: v.id("users"),
     type: v.union(v.literal("income"), v.literal("expense")),
     amount: v.number(),
-    /** Новые записи всегда с id; legacy — migrations:linkLegacyTransactions */
-    categoryId: v.optional(v.id("categories")),
-    /** @deprecated legacy — удаляется миграцией */
-    category: v.optional(v.string()),
+    categoryId: v.id("categories"),
     note: v.optional(v.string()),
     date: v.number(),
   })

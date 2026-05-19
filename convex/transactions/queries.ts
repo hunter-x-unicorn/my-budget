@@ -52,22 +52,15 @@ export const monthBundle = query({
       type: row.type,
       amount: row.amount,
       categoryId: row.categoryId,
-      categoryName: row.categoryId
-        ? (nameById.get(row.categoryId) ?? "—")
-        : (row.category ?? "—"),
+      categoryName: nameById.get(row.categoryId) ?? "—",
       note: row.note,
       date: row.date,
     }));
 
-    const tableRows = rows.filter(
-      (r): r is typeof r & { categoryId: NonNullable<typeof r.categoryId> } =>
-        r.categoryId !== undefined,
-    );
-
     return {
       transactions,
       summary: buildSummary(rows),
-      table: buildTableForMonth(year, month, tableRows),
+      table: buildTableForMonth(year, month, rows),
     };
   },
 });
