@@ -1,7 +1,32 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
+import { mutation, type MutationCtx } from "../_generated/server";
 import { requireUserId } from "../lib/auth";
 import { transactionType } from "../lib/validators";
+
+type TransactionInput = {
+  type: "income" | "expense";
+  amount: number;
+  categoryId: Id<"categories">;
+};
+
+async function validateTransaction(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: TransactionInput,
+) {
+  if (args.amount <= 0) {
+    throw new ConvexError("Сумма должна быть больше нуля");
+  }
+
+  const category = await ctx.db.get(args.categoryId);
+  if (category === null || category.userId !== userId) {
+    throw new ConvexError("Категория не найдена");
+  }
+  if (category.type !== args.type) {
+    throw new ConvexError("Тип операции не совпадает с категорией");
+  }
+}
 
 export const create = mutation({
   args: {
@@ -14,18 +39,7 @@ export const create = mutation({
   returns: v.id("transactions"),
   handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
-
-    if (args.amount <= 0) {
-      throw new ConvexError("Сумма должна быть больше нуля");
-    }
-
-    const category = await ctx.db.get(args.categoryId);
-    if (category === null || category.userId !== userId) {
-      throw new ConvexError("Категория не найдена");
-    }
-    if (category.type !== args.type) {
-      throw new ConvexError("Тип операции не совпадает с категорией");
-    }
+    await validateTransaction(ctx, userId, args);
 
     return await ctx.db.insert("transactions", {
       userId,
@@ -35,6 +49,36 @@ export const create = mutation({
       note: args.note?.trim() || undefined,
       date: args.date ?? Date.now(),
     });
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("transactions"),
+    type: transactionType,
+    amount: v.number(),
+    categoryId: v.id("categories"),
+    note: v.optional(v.string()),
+    date: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const row = await ctx.db.get(args.id);
+    if (row === null || row.userId !== userId) {
+      throw new ConvexError("Операция не найдена");
+    }
+
+    await validateTransaction(ctx, userId, args);
+
+    await ctx.db.patch(args.id, {
+      type: args.type,
+      amount: Math.round(args.amount * 100) / 100,
+      categoryId: args.categoryId,
+      note: args.note?.trim() || undefined,
+      date: args.date,
+    });
+    return null;
   },
 });
 

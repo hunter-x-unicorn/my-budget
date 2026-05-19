@@ -121,9 +121,7 @@ export const create = mutation({
 
     const siblings = await ctx.db
       .query("categories")
-      .withIndex("by_user_type", (q) =>
-        q.eq("userId", userId).eq("type", type),
-      )
+      .withIndex("by_user_type", (q) => q.eq("userId", userId).eq("type", type))
       .collect();
 
     const duplicate = siblings.some(
@@ -195,9 +193,7 @@ export const remove = mutation({
     }
 
     if (await categoryHasTransactions(ctx, category)) {
-      throw new ConvexError(
-        "Нельзя удалить: есть операции в этой категории",
-      );
+      throw new ConvexError("Нельзя удалить: есть операции в этой категории");
     }
 
     await ctx.db.delete(id);

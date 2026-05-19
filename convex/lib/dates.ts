@@ -7,11 +7,7 @@ export function assertMonthArgs(year: number, month: number) {
   if (month < 0 || month > 11 || !Number.isInteger(month)) {
     throw new ConvexError("month должен быть 0–11");
   }
-  if (
-    year < MIN_YEAR ||
-    year > MAX_YEAR ||
-    !Number.isInteger(year)
-  ) {
+  if (year < MIN_YEAR || year > MAX_YEAR || !Number.isInteger(year)) {
     throw new ConvexError(`year должен быть ${MIN_YEAR}–${MAX_YEAR}`);
   }
 }

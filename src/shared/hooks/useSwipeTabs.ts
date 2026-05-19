@@ -9,9 +9,7 @@ export function useSwipeTabs(tabCount: number = TAB_COUNT) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const scrollIntent = useRef<ScrollIntent>(null);
   const isScrolling = useRef(false);
-  const scrollEndFallback = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const scrollEndFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearScrollLock = useCallback(() => {
     isScrolling.current = false;

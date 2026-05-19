@@ -70,9 +70,7 @@ export function AuthForm() {
               name="password"
               type="password"
               placeholder="Минимум 8 символов"
-              autoComplete={
-                mode === "signUp" ? "new-password" : "current-password"
-              }
+              autoComplete={mode === "signUp" ? "new-password" : "current-password"}
               minLength={8}
               required
             />
@@ -83,11 +81,7 @@ export function AuthForm() {
           {error && <p className="error">{error}</p>}
 
           <button type="submit" className="btn-primary" disabled={pending}>
-            {pending
-              ? "Подождите…"
-              : mode === "signUp"
-                ? "Создать аккаунт"
-                : "Войти"}
+            {pending ? "Подождите…" : mode === "signUp" ? "Создать аккаунт" : "Войти"}
           </button>
         </form>
 

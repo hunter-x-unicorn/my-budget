@@ -10,8 +10,7 @@ type MonthNavigatorProps = {
 export function MonthNavigator({ titleAs = "label" }: MonthNavigatorProps) {
   const { month, setMonth } = useMonth();
   const isCurrentMonth =
-    month.year === currentMonth().year &&
-    month.month === currentMonth().month;
+    month.year === currentMonth().year && month.month === currentMonth().month;
 
   const label = formatMonthLabel(month.year, month.month);
 
@@ -25,11 +24,7 @@ export function MonthNavigator({ titleAs = "label" }: MonthNavigatorProps) {
       >
         ‹
       </button>
-      {titleAs === "h2" ? (
-        <h2>{label}</h2>
-      ) : (
-        <p className="month-nav-label">{label}</p>
-      )}
+      {titleAs === "h2" ? <h2>{label}</h2> : <p className="month-nav-label">{label}</p>}
       <button
         type="button"
         className="btn-icon"

@@ -1,10 +1,6 @@
 import type { MonthState } from "../types/budget";
 
-export function shiftMonth(
-  year: number,
-  month: number,
-  delta: number,
-): MonthState {
+export function shiftMonth(year: number, month: number, delta: number): MonthState {
   const d = new Date(year, month + delta, 1);
   return { year: d.getFullYear(), month: d.getMonth() };
 }

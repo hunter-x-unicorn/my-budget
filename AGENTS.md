@@ -12,21 +12,21 @@
 
 ## Карта папок
 
-| Путь | Содержимое |
-|------|------------|
-| `docs/` | ARCHITECTURE, DECISIONS, RUNBOOK |
-| `convex/schema.ts` | Таблицы users, categories, transactions |
-| `convex/lib/` | auth, dates, validators |
-| `convex/categories.ts` | CRUD категорий, seed internal |
-| `convex/transactions/` | monthBundle, create, remove, table |
-| `convex/migrations.ts` | internal миграции данных |
-| `convex/_generated/` | **Не трогать** (кроме запуска codegen) |
-| `src/app/` | App, BudgetApp, navigation |
-| `src/features/` | Экраны: table, history, add, analytics, account, auth |
-| `src/shared/ui/` | MonthNavigator, SummaryStrip, BottomNav |
-| `src/shared/hooks/` | useSwipeTabs, useMonth |
-| `src/shared/lib/` | formatMoney, dates |
-| `src/styles/` | tokens.css, layout/nav/summary/… modules, index.css |
+| Путь                   | Содержимое                                            |
+| ---------------------- | ----------------------------------------------------- |
+| `docs/`                | ARCHITECTURE, DECISIONS, RUNBOOK                      |
+| `convex/schema.ts`     | Таблицы users, categories, transactions               |
+| `convex/lib/`          | auth, dates, validators                               |
+| `convex/categories.ts` | CRUD категорий, seed internal                         |
+| `convex/transactions/` | monthBundle, create, remove, table                    |
+| `convex/migrations.ts` | internal миграции данных                              |
+| `convex/_generated/`   | **Не трогать** (кроме запуска codegen)                |
+| `src/app/`             | App, BudgetApp, navigation                            |
+| `src/features/`        | Экраны: table, history, add, analytics, account, auth |
+| `src/shared/ui/`       | MonthNavigator, SummaryStrip, BottomNav               |
+| `src/shared/hooks/`    | useSwipeTabs, useMonth                                |
+| `src/shared/lib/`      | formatMoney, dates                                    |
+| `src/styles/`          | tokens.css, layout/nav/summary/… modules, index.css   |
 
 ## Именование
 

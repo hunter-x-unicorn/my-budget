@@ -1,15 +1,20 @@
 import { useMutation, useQuery } from "convex/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { useMonth } from "../../shared/hooks/useMonth";
 import { formatDayHeader, formatListTime, formatMoney } from "../../shared/lib/budget";
 import { MonthNavigator } from "../../shared/ui/MonthNavigator";
+import { TransactionEditOverlay } from "./TransactionEditOverlay";
 
 export function HistoryScreen() {
   const { month } = useMonth();
   const bundle = useQuery(api.transactions.queries.monthBundle, month);
   const transactions = bundle?.transactions;
   const remove = useMutation(api.transactions.mutations.remove);
+  const [editingId, setEditingId] = useState<Id<"transactions"> | null>(null);
+
+  const editingTx = transactions?.find((t) => t._id === editingId);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof transactions>>();
@@ -31,9 +36,7 @@ export function HistoryScreen() {
       <h2 className="panel-title">История</h2>
       <MonthNavigator />
 
-      {transactions === undefined && (
-        <p className="empty-state">Загрузка…</p>
-      )}
+      {transactions === undefined && <p className="empty-state">Загрузка…</p>}
 
       {transactions?.length === 0 && (
         <p className="empty-state">За этот месяц операций пока нет.</p>
@@ -45,7 +48,11 @@ export function HistoryScreen() {
           <ul className="tx-list">
             {group.items.map((tx) => (
               <li key={tx._id} className="tx-item">
-                <div className="tx-main">
+                <button
+                  type="button"
+                  className="tx-main"
+                  onClick={() => setEditingId(tx._id)}
+                >
                   <span className={`tx-icon ${tx.type}`} aria-hidden>
                     {tx.type === "income" ? "↑" : "↓"}
                   </span>
@@ -58,7 +65,7 @@ export function HistoryScreen() {
                     {tx.type === "income" ? "+" : "−"}
                     {formatMoney(tx.amount)}
                   </span>
-                </div>
+                </button>
                 <button
                   type="button"
                   className="tx-delete"
@@ -81,6 +88,21 @@ export function HistoryScreen() {
           </ul>
         </section>
       ))}
+
+      {editingTx?.categoryId && (
+        <TransactionEditOverlay
+          transaction={{
+            _id: editingTx._id,
+            type: editingTx.type,
+            amount: editingTx.amount,
+            categoryId: editingTx.categoryId,
+            categoryName: editingTx.categoryName,
+            note: editingTx.note,
+            date: editingTx.date,
+          }}
+          onClose={() => setEditingId(null)}
+        />
+      )}
     </div>
   );
 }

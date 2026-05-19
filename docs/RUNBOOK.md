@@ -14,10 +14,10 @@
 
 ## Переменные Netlify
 
-| Переменная | Где взять |
-|------------|-----------|
-| `CONVEX_DEPLOY_KEY` | Convex Dashboard → Settings → Deploy Key (prod) |
-| `VITE_CONVEX_URL` | URL prod deployment, напр. `https://happy-animal-123.convex.cloud` |
+| Переменная          | Где взять                                                          |
+| ------------------- | ------------------------------------------------------------------ |
+| `CONVEX_DEPLOY_KEY` | Convex Dashboard → Settings → Deploy Key (prod)                    |
+| `VITE_CONVEX_URL`   | URL prod deployment, напр. `https://happy-animal-123.convex.cloud` |
 
 Без `VITE_CONVEX_URL` фронт не подключится к бэкенду (пустой или wrong URL).
 
@@ -34,14 +34,14 @@
 
 ## Типичные ошибки
 
-| Симптом | Действие |
-|---------|----------|
-| Белый экран / нет данных | Проверить `VITE_CONVEX_URL` в Netlify build env |
-| «Требуется вход» на всех запросах | JWT keys на prod; перелогиниться |
-| Build падает на convex deploy | `CONVEX_DEPLOY_KEY`, доступ к prod project |
-| Типы API не сходятся | `npx convex dev` локально, не править `api.d.ts` вручную |
-| Старые операции не в таблице | См. миграции ниже |
-| Schema push fails (legacy rows) | Сначала `linkLegacyTransactions`, потом деплой |
+| Симптом                           | Действие                                                 |
+| --------------------------------- | -------------------------------------------------------- |
+| Белый экран / нет данных          | Проверить `VITE_CONVEX_URL` в Netlify build env          |
+| «Требуется вход» на всех запросах | JWT keys на prod; перелогиниться                         |
+| Build падает на convex deploy     | `CONVEX_DEPLOY_KEY`, доступ к prod project               |
+| Типы API не сходятся              | `npx convex dev` локально, не править `api.d.ts` вручную |
+| Старые операции не в таблице      | См. миграции ниже                                        |
+| Schema push fails (legacy rows)   | Сначала `linkLegacyTransactions`, потом деплой           |
 
 ### Миграция legacy transactions
 

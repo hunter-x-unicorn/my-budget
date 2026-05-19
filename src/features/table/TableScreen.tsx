@@ -3,11 +3,7 @@ import { useMemo } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useMonth } from "../../shared/hooks/useMonth";
-import {
-  formatCellAmount,
-  formatMoney,
-  formatTableDay,
-} from "../../shared/lib/budget";
+import { formatCellAmount, formatMoney, formatTableDay } from "../../shared/lib/budget";
 import { MonthNavigator } from "../../shared/ui/MonthNavigator";
 import { SummaryStrip } from "../../shared/ui/SummaryStrip";
 
@@ -62,9 +58,7 @@ export function TableScreen() {
         </th>
         {dates.map((dk) => {
           const cell = cellFor(cat._id, dk);
-          const text = cell
-            ? formatCellAmount(cell.income, cell.expense)
-            : "";
+          const text = cell ? formatCellAmount(cell.income, cell.expense) : "";
           const hasIncome = (cell?.income ?? 0) > 0;
           const hasExpense = (cell?.expense ?? 0) > 0;
           return (
@@ -113,9 +107,7 @@ export function TableScreen() {
       <SummaryStrip summary={summary} compact />
 
       <div className="matrix-wrap">
-        {categories === undefined && (
-          <p className="empty-state">Загрузка…</p>
-        )}
+        {categories === undefined && <p className="empty-state">Загрузка…</p>}
 
         {categories !== undefined && (
           <table className="matrix-table">

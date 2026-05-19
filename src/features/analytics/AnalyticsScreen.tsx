@@ -13,10 +13,7 @@ export function AnalyticsScreen() {
   const transactions = bundle?.transactions;
 
   const byCategory = useMemo(() => {
-    const map = new Map<
-      string,
-      { name: string; expense: number; income: number }
-    >();
+    const map = new Map<string, { name: string; expense: number; income: number }>();
     for (const tx of transactions ?? []) {
       const key = tx.categoryId;
       const row = map.get(key) ?? {
@@ -48,9 +45,7 @@ export function AnalyticsScreen() {
 
       <section className="analytics-section">
         <h3>Расходы по категориям</h3>
-        {byCategory.length === 0 && (
-          <p className="empty-state">Нет данных за месяц</p>
-        )}
+        {byCategory.length === 0 && <p className="empty-state">Нет данных за месяц</p>}
         <ul className="analytics-bars">
           {byCategory
             .filter((c) => c.expense > 0)

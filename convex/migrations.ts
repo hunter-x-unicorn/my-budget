@@ -41,9 +41,7 @@ export const linkLegacyTransactions = internalMutation({
 
       const categories = await ctx.db
         .query("categories")
-        .withIndex("by_user_type", (q) =>
-          q.eq("userId", tx.userId).eq("type", tx.type),
-        )
+        .withIndex("by_user_type", (q) => q.eq("userId", tx.userId).eq("type", tx.type))
         .collect();
 
       const match = categories.find(

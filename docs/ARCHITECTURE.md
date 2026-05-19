@@ -4,13 +4,13 @@
 
 ## Стек
 
-| Слой | Технология |
-|------|------------|
-| UI | React 18, Vite, CSS (без UI-kit) |
-| Backend | [Convex](https://convex.dev) — queries, mutations, real-time |
-| Auth | [@convex-dev/auth](https://labs.convex.dev/auth) — email + пароль |
-| Фронт (prod) | [Netlify](https://netlify.com) — статика из `dist` |
-| Бэкенд (prod) | `npx convex deploy` с `CONVEX_DEPLOY_KEY` |
+| Слой          | Технология                                                        |
+| ------------- | ----------------------------------------------------------------- |
+| UI            | React 18, Vite, CSS (без UI-kit)                                  |
+| Backend       | [Convex](https://convex.dev) — queries, mutations, real-time      |
+| Auth          | [@convex-dev/auth](https://labs.convex.dev/auth) — email + пароль |
+| Фронт (prod)  | [Netlify](https://netlify.com) — статика из `dist`                |
+| Бэкенд (prod) | `npx convex deploy` с `CONVEX_DEPLOY_KEY`                         |
 
 ## Экраны (5 вкладок)
 
@@ -20,7 +20,7 @@
 4. **Аналитика** — сводка и расходы по категориям
 5. **Аккаунт** — email, выход, управление категориями
 
-Навигация: горизонтальный свайп между панелями + нижняя панель с иконками.
+Навигация: горизонтальный свайп между панелями + нижняя панель с иконками. Deep link: `#table`, `#history`, `#add`, `#analytics`, `#account`.
 
 ## Таблицы Convex
 
@@ -60,19 +60,19 @@ src/shared/     — ui, hooks, lib, types
 
 ### Convex (dashboard / `npx convex env`)
 
-| Переменная | Назначение |
-|------------|------------|
-| `JWT_PRIVATE_KEY` | Подпись JWT для Convex Auth |
-| `JWKS` | Публичные ключи для проверки JWT |
+| Переменная        | Назначение                       |
+| ----------------- | -------------------------------- |
+| `JWT_PRIVATE_KEY` | Подпись JWT для Convex Auth      |
+| `JWKS`            | Публичные ключи для проверки JWT |
 
 Генерация ключей: `node setup.mjs` (если есть в проекте) или документация Convex Auth.
 
 ### Netlify (site settings)
 
-| Переменная | Назначение |
-|------------|------------|
-| `VITE_CONVEX_URL` | URL prod deployment Convex (`https://….convex.cloud`) |
-| `CONVEX_DEPLOY_KEY` | Ключ для `npx convex deploy` в build hook |
+| Переменная          | Назначение                                            |
+| ------------------- | ----------------------------------------------------- |
+| `VITE_CONVEX_URL`   | URL prod deployment Convex (`https://….convex.cloud`) |
+| `CONVEX_DEPLOY_KEY` | Ключ для `npx convex deploy` в build hook             |
 
 ### Локальная разработка
 

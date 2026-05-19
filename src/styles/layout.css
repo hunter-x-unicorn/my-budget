@@ -40,8 +40,7 @@
   touch-action: pan-y;
   overscroll-behavior-y: contain;
   padding: max(0.75rem, env(safe-area-inset-top))
-    max(0.75rem, env(safe-area-inset-right))
-    1.25rem
+    max(0.75rem, env(safe-area-inset-right)) 1.25rem
     max(0.75rem, env(safe-area-inset-left));
   -webkit-overflow-scrolling: touch;
 }

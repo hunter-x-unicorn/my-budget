@@ -1,165 +1,47 @@
-import { useMutation, useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useMutation } from "convex/react";
+import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import {
-  fromDateInputValue,
-  toDateInputValue,
-  type TransactionType,
-} from "../../shared/lib/budget";
+import type { TransactionType } from "../../shared/types/budget";
+import { TransactionForm } from "../../shared/ui/TransactionForm";
+
+function newAddInitial() {
+  return {
+    type: "expense" as TransactionType,
+    amount: 0,
+    date: Date.now(),
+  };
+}
 
 export function AddScreen() {
-  const categories = useQuery(api.categories.list);
   const create = useMutation(api.transactions.mutations.create);
-
-  const [type, setType] = useState<TransactionType>("expense");
-  const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState<Id<"categories"> | "">("");
-  const [note, setNote] = useState("");
-  const [date, setDate] = useState(() => toDateInputValue(Date.now()));
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
   const [success, setSuccess] = useState(false);
-
-  const filtered = useMemo(
-    () => categories?.filter((c) => c.type === type) ?? [],
-    [categories, type],
-  );
-
-  const selectedCategoryId =
-    categoryId && filtered.some((c) => c._id === categoryId)
-      ? categoryId
-      : (filtered[0]?._id ?? "");
+  const [initial, setInitial] = useState(newAddInitial);
 
   return (
     <div className="tab-panel add-tab">
       <h2 className="panel-title">Новая операция</h2>
 
-      <div className="type-toggle" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={type === "expense"}
-          className={type === "expense" ? "active expense" : ""}
-          onClick={() => {
-            setType("expense");
-            setCategoryId("");
-          }}
-        >
-          Расход
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={type === "income"}
-          className={type === "income" ? "active income" : ""}
-          onClick={() => {
-            setType("income");
-            setCategoryId("");
-          }}
-        >
-          Доход
-        </button>
-      </div>
-
-      <form
-        className="add-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setError(null);
+      <TransactionForm
+        key={formKey}
+        initial={initial}
+        submitLabel="Сохранить"
+        onSubmit={async (values) => {
           setSuccess(false);
-          const value = parseFloat(amount.replace(",", "."));
-          if (Number.isNaN(value) || value <= 0) {
-            setError("Введите сумму");
-            return;
-          }
-          if (!selectedCategoryId) {
-            setError("Добавьте категорию в разделе «Аккаунт»");
-            return;
-          }
-          setPending(true);
-          void create({
-            type,
-            amount: value,
-            categoryId: selectedCategoryId,
-            note: note || undefined,
-            date: fromDateInputValue(date),
-          })
-            .then(() => {
-              setAmount("");
-              setNote("");
-              setDate(toDateInputValue(Date.now()));
-              setSuccess(true);
-            })
-            .catch((err: unknown) => {
-              setError(
-                err instanceof Error ? err.message : "Не удалось сохранить",
-              );
-            })
-            .finally(() => setPending(false));
+          await create({
+            type: values.type,
+            amount: values.amount,
+            categoryId: values.categoryId,
+            note: values.note,
+            date: values.date,
+          });
+          setSuccess(true);
+          setInitial(newAddInitial());
+          setFormKey((k) => k + 1);
         }}
-      >
-        <label className="field amount-field">
-          <span>Сумма, ₽</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            placeholder="0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            min="1"
-            step="1"
-            required
-          />
-        </label>
+      />
 
-        <label className="field">
-          <span>Категория</span>
-          <select
-            value={selectedCategoryId}
-            onChange={(e) => setCategoryId(e.target.value as Id<"categories">)}
-            disabled={filtered.length === 0}
-          >
-            {filtered.length === 0 ? (
-              <option value="">Нет категорий</option>
-            ) : (
-              filtered.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
-                </option>
-              ))
-            )}
-          </select>
-        </label>
-
-        <label className="field">
-          <span>Дата</span>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-          />
-        </label>
-
-        <label className="field">
-          <span>Заметка (необязательно)</span>
-          <input
-            type="text"
-            placeholder="Кофе, метро…"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            maxLength={120}
-          />
-        </label>
-
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success-msg">Операция сохранена</p>}
-
-        <button type="submit" className="btn-primary" disabled={pending}>
-          {pending ? "Сохранение…" : "Сохранить"}
-        </button>
-      </form>
+      {success && <p className="success-msg">Операция сохранена</p>}
     </div>
   );
 }

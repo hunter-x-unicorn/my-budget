@@ -5,9 +5,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 type AuthCtx = QueryCtx | MutationCtx;
 
-export async function getOptionalUserId(
-  ctx: AuthCtx,
-): Promise<Id<"users"> | null> {
+export async function getOptionalUserId(ctx: AuthCtx): Promise<Id<"users"> | null> {
   return await getAuthUserId(ctx);
 }
 

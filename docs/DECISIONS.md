@@ -9,6 +9,7 @@
 **Переименование:** `categories.rename` — только таблица `categories`; история подхватывает новое имя через join.
 
 **Миграция prod (до деплоя схемы без `category`):**
+
 1. `npx convex run migrations:linkLegacyTransactions`
 2. при необходимости `npx convex run migrations:removeOrphanTransactions`
 3. деплой схемы с обязательным `categoryId`

@@ -9,18 +9,15 @@ import { TableScreen } from "../features/table/TableScreen";
 import { MonthProvider } from "../shared/hooks/MonthProvider";
 import { useSwipeTabs } from "../shared/hooks/useSwipeTabs";
 import { BottomNav } from "../shared/ui/BottomNav";
+import { useHashTabs } from "../shared/hooks/useHashTabs";
 import { TAB_COUNT } from "./navigation";
 
 export function BudgetApp() {
   const bootstrap = useMutation(api.categories.bootstrap);
-  const {
-    activeTab,
-    viewportRef,
-    scrollToTab,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd,
-  } = useSwipeTabs(TAB_COUNT);
+  const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchMove, onTouchEnd } =
+    useSwipeTabs(TAB_COUNT);
+
+  useHashTabs(activeTab, scrollToTab);
 
   useEffect(() => {
     void bootstrap();

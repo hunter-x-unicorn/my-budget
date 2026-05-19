@@ -23,3 +23,19 @@ export const BOTTOM_NAV_TABS = [
   { id: "analytics", label: "Аналитика", Icon: IconAnalytics },
   { id: "account", label: "Аккаунт", Icon: IconAccount },
 ] as const;
+
+export type TabId = (typeof BOTTOM_NAV_TABS)[number]["id"];
+
+const TAB_ID_TO_INDEX = Object.fromEntries(
+  BOTTOM_NAV_TABS.map((tab, index) => [tab.id, index]),
+) as Record<TabId, number>;
+
+export function tabIndexFromHash(hash: string): number {
+  const id = hash.replace(/^#/, "").toLowerCase() as TabId;
+  return TAB_ID_TO_INDEX[id] ?? TAB_INDEX.table;
+}
+
+export function hashForTabIndex(index: number): string {
+  const tab = BOTTOM_NAV_TABS[index];
+  return tab ? `#${tab.id}` : "#table";
+}

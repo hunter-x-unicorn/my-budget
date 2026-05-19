@@ -37,6 +37,12 @@
   gap: 0.65rem;
   padding: 0.75rem 0.5rem 0.75rem 0.75rem;
   min-width: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
 }
 
 .tx-icon {

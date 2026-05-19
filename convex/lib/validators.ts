@@ -1,9 +1,6 @@
 import { v } from "convex/values";
 
-export const transactionType = v.union(
-  v.literal("income"),
-  v.literal("expense"),
-);
+export const transactionType = v.union(v.literal("income"), v.literal("expense"));
 
 export const categoryType = v.union(v.literal("income"), v.literal("expense"));
 
