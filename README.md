@@ -22,6 +22,8 @@
 |---------|----------|
 | `npm run dev` | Фронт + `convex dev` |
 | `npm run build` | Typecheck + production build |
+| `npm run lint` | ESLint (+ `@convex-dev/eslint-plugin`) |
+| `npm test` | Vitest (dates, агрегация таблицы) |
 | `npx convex deploy` | Prod backend (не для локальной разработки) |
 
 ## Codegen

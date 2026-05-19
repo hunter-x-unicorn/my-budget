@@ -15,9 +15,11 @@ export async function categoryHasTransactions(
     .first();
   if (byId !== null) return true;
 
+  // Legacy rows without categoryId — narrow scan per user (personal budget scale).
   const legacyRows = await ctx.db
     .query("transactions")
     .withIndex("by_user_date", (q) => q.eq("userId", userId))
+    // eslint-disable-next-line @convex-dev/no-filter-in-query -- legacy orphan check
     .filter((q) =>
       q.and(
         q.eq(q.field("categoryId"), undefined),

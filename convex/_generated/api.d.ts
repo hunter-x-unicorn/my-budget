@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_categories from "../lib/categories.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   categories: typeof categories;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "lib/categories": typeof lib_categories;
   "lib/dates": typeof lib_dates;
   "lib/validators": typeof lib_validators;
   migrations: typeof migrations;

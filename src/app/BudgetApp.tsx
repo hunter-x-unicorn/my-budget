@@ -6,7 +6,7 @@ import { AddScreen } from "../features/add/AddScreen";
 import { AnalyticsScreen } from "../features/analytics/AnalyticsScreen";
 import { HistoryScreen } from "../features/history/HistoryScreen";
 import { TableScreen } from "../features/table/TableScreen";
-import { MonthProvider } from "../shared/hooks/useMonth";
+import { MonthProvider } from "../shared/hooks/MonthProvider";
 import { useSwipeTabs } from "../shared/hooks/useSwipeTabs";
 import { BottomNav } from "../shared/ui/BottomNav";
 import { TAB_COUNT } from "./navigation";

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -16,18 +16,20 @@ export function AddScreen() {
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState<Id<"categories"> | "">("");
   const [note, setNote] = useState("");
-  const [date, setDate] = useState(toDateInputValue(Date.now()));
+  const [date, setDate] = useState(() => toDateInputValue(Date.now()));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const filtered = categories?.filter((c) => c.type === type) ?? [];
+  const filtered = useMemo(
+    () => categories?.filter((c) => c.type === type) ?? [],
+    [categories, type],
+  );
 
-  useEffect(() => {
-    if (filtered.length > 0 && !filtered.some((c) => c._id === categoryId)) {
-      setCategoryId(filtered[0]!._id);
-    }
-  }, [filtered, categoryId, type]);
+  const selectedCategoryId =
+    categoryId && filtered.some((c) => c._id === categoryId)
+      ? categoryId
+      : (filtered[0]?._id ?? "");
 
   return (
     <div className="tab-panel add-tab">
@@ -39,7 +41,10 @@ export function AddScreen() {
           role="tab"
           aria-selected={type === "expense"}
           className={type === "expense" ? "active expense" : ""}
-          onClick={() => setType("expense")}
+          onClick={() => {
+            setType("expense");
+            setCategoryId("");
+          }}
         >
           Расход
         </button>
@@ -48,7 +53,10 @@ export function AddScreen() {
           role="tab"
           aria-selected={type === "income"}
           className={type === "income" ? "active income" : ""}
-          onClick={() => setType("income")}
+          onClick={() => {
+            setType("income");
+            setCategoryId("");
+          }}
         >
           Доход
         </button>
@@ -65,7 +73,7 @@ export function AddScreen() {
             setError("Введите сумму");
             return;
           }
-          if (!categoryId) {
+          if (!selectedCategoryId) {
             setError("Добавьте категорию в разделе «Аккаунт»");
             return;
           }
@@ -73,7 +81,7 @@ export function AddScreen() {
           void create({
             type,
             amount: value,
-            categoryId,
+            categoryId: selectedCategoryId,
             note: note || undefined,
             date: fromDateInputValue(date),
           })
@@ -108,7 +116,7 @@ export function AddScreen() {
         <label className="field">
           <span>Категория</span>
           <select
-            value={categoryId}
+            value={selectedCategoryId}
             onChange={(e) => setCategoryId(e.target.value as Id<"categories">)}
             disabled={filtered.length === 0}
           >
