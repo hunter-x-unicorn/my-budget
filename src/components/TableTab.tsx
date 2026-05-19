@@ -27,8 +27,9 @@ export function TableTab({
   onMonthChange: (m: MonthState) => void;
 }) {
   const categories = useQuery(api.categories.list);
-  const summary = useQuery(api.transactions.summaryForMonth, month);
-  const table = useQuery(api.transactions.tableForMonth, month);
+  const bundle = useQuery(api.transactions.queries.monthBundle, month);
+  const summary = bundle?.summary;
+  const table = bundle?.table;
 
   const isCurrentMonth =
     month.year === currentMonth().year && month.month === currentMonth().month;

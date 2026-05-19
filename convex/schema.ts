@@ -27,12 +27,13 @@ const schema = defineSchema({
     userId: v.id("users"),
     type: v.union(v.literal("income"), v.literal("expense")),
     amount: v.number(),
+    /** Новые записи всегда с id; legacy — migrations:linkLegacyTransactions */
     categoryId: v.optional(v.id("categories")),
-    category: v.string(),
+    /** @deprecated legacy — удаляется миграцией */
+    category: v.optional(v.string()),
     note: v.optional(v.string()),
     date: v.number(),
   })
-    .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "date"])
     .index("by_category", ["categoryId"]),
 });

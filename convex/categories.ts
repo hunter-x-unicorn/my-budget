@@ -1,9 +1,13 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { mutation, type MutationCtx, query } from "./_generated/server";
-
-const categoryType = v.union(v.literal("income"), v.literal("expense"));
+import {
+  internalMutation,
+  mutation,
+  type MutationCtx,
+  query,
+} from "./_generated/server";
+import { getOptionalUserId, requireUserId } from "./lib/auth";
+import { categoryDocValidator, categoryType } from "./lib/validators";
 
 const DEFAULT_EXPENSE = [
   "Еда",
@@ -17,15 +21,16 @@ const DEFAULT_EXPENSE = [
 
 const DEFAULT_INCOME = ["Зарплата", "Подработка", "Подарок", "Другое"];
 
-async function requireUserId(ctx: MutationCtx) {
-  const userId = await getAuthUserId(ctx);
-  if (userId === null) {
-    throw new ConvexError("Требуется вход");
-  }
-  return userId;
+function sortCategories<T extends { type: string; order: number }>(rows: T[]) {
+  return rows.sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type === "expense" ? -1 : 1;
+    }
+    return a.order - b.order;
+  });
 }
 
-async function seedDefaults(ctx: MutationCtx, userId: Id<"users">) {
+async function insertDefaultCategories(ctx: MutationCtx, userId: Id<"users">) {
   let order = 0;
   for (const name of DEFAULT_EXPENSE) {
     await ctx.db.insert("categories", {
@@ -46,28 +51,10 @@ async function seedDefaults(ctx: MutationCtx, userId: Id<"users">) {
   }
 }
 
-export const list = query({
+/** Idempotent seed — вызывать один раз из BudgetApp, не из вкладок. */
+export const bootstrap = mutation({
   args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) return [];
-
-    const rows = await ctx.db
-      .query("categories")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-
-    return rows.sort((a, b) => {
-      if (a.type !== b.type) {
-        return a.type === "expense" ? -1 : 1;
-      }
-      return a.order - b.order;
-    });
-  },
-});
-
-export const ensureDefaults = mutation({
-  args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const userId = await requireUserId(ctx);
     const existing = await ctx.db
@@ -75,8 +62,43 @@ export const ensureDefaults = mutation({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
     if (existing === null) {
-      await seedDefaults(ctx, userId);
+      await insertDefaultCategories(ctx, userId);
     }
+    return null;
+  },
+});
+
+export const seedDefaultsIfEmpty = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const userId = await getOptionalUserId(ctx);
+    if (userId === null) return null;
+
+    const existing = await ctx.db
+      .query("categories")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (existing !== null) return null;
+
+    await insertDefaultCategories(ctx, userId);
+    return null;
+  },
+});
+
+export const list = query({
+  args: {},
+  returns: v.array(categoryDocValidator),
+  handler: async (ctx) => {
+    const userId = await getOptionalUserId(ctx);
+    if (userId === null) return [];
+
+    const rows = await ctx.db
+      .query("categories")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    return sortCategories(rows);
   },
 });
 
@@ -85,6 +107,7 @@ export const create = mutation({
     name: v.string(),
     type: categoryType,
   },
+  returns: v.id("categories"),
   handler: async (ctx, { name, type }) => {
     const userId = await requireUserId(ctx);
     const trimmed = name.trim();
@@ -122,6 +145,7 @@ export const create = mutation({
 
 export const remove = mutation({
   args: { id: v.id("categories") },
+  returns: v.null(),
   handler: async (ctx, { id }) => {
     const userId = await requireUserId(ctx);
     const category = await ctx.db.get(id);
@@ -140,6 +164,23 @@ export const remove = mutation({
       );
     }
 
+    const legacyUsed = await ctx.db
+      .query("transactions")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("type"), category.type),
+          q.eq(q.field("category"), category.name),
+        ),
+      )
+      .first();
+
+    if (legacyUsed !== null) {
+      throw new ConvexError(
+        "Нельзя удалить: есть операции в этой категории",
+      );
+    }
+
     await ctx.db.delete(id);
 
     const siblings = await ctx.db
@@ -153,6 +194,7 @@ export const remove = mutation({
     for (let i = 0; i < sorted.length; i++) {
       await ctx.db.patch(sorted[i]!._id, { order: i });
     }
+    return null;
   },
 });
 
@@ -161,6 +203,7 @@ export const move = mutation({
     id: v.id("categories"),
     direction: v.union(v.literal("up"), v.literal("down")),
   },
+  returns: v.null(),
   handler: async (ctx, { id, direction }) => {
     const userId = await requireUserId(ctx);
     const category = await ctx.db.get(id);
@@ -179,10 +222,11 @@ export const move = mutation({
 
     const index = siblings.findIndex((c) => c._id === id);
     const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= siblings.length) return;
+    if (swapIndex < 0 || swapIndex >= siblings.length) return null;
 
     const other = siblings[swapIndex]!;
     await ctx.db.patch(id, { order: other.order });
     await ctx.db.patch(other._id, { order: category.order });
+    return null;
   },
 });

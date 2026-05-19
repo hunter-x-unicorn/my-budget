@@ -11,7 +11,13 @@
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as http from "../http.js";
-import type * as transactions from "../transactions.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_dates from "../lib/dates.js";
+import type * as lib_validators from "../lib/validators.js";
+import type * as migrations from "../migrations.js";
+import type * as transactions_mutations from "../transactions/mutations.js";
+import type * as transactions_queries from "../transactions/queries.js";
+import type * as transactions_table from "../transactions/table.js";
 import type * as users from "../users.js";
 
 import type {
@@ -24,7 +30,13 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   categories: typeof categories;
   http: typeof http;
-  transactions: typeof transactions;
+  "lib/auth": typeof lib_auth;
+  "lib/dates": typeof lib_dates;
+  "lib/validators": typeof lib_validators;
+  migrations: typeof migrations;
+  "transactions/mutations": typeof transactions_mutations;
+  "transactions/queries": typeof transactions_queries;
+  "transactions/table": typeof transactions_table;
   users: typeof users;
 }>;
 

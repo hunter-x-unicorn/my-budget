@@ -1,6 +1,6 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { TransactionType } from "../lib/budget";
@@ -98,16 +98,11 @@ export function AccountTab() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.current);
   const categories = useQuery(api.categories.list);
-  const ensureDefaults = useMutation(api.categories.ensureDefaults);
   const createCategory = useMutation(api.categories.create);
   const removeCategory = useMutation(api.categories.remove);
   const moveCategory = useMutation(api.categories.move);
 
   const [actionError, setActionError] = useState<string | null>(null);
-
-  useEffect(() => {
-    void ensureDefaults();
-  }, [ensureDefaults]);
 
   const expense =
     categories?.filter((c) => c.type === "expense") ?? [];

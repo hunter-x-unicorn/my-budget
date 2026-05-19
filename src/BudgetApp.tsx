@@ -1,20 +1,26 @@
-import { useState } from "react";
-import { AddSheet } from "./components/AddSheet";
+import { useMutation } from "convex/react";
+import { useEffect, useState } from "react";
+import { api } from "../convex/_generated/api";
 import { AccountTab } from "./components/AccountTab";
+import { AddTab } from "./components/AddTab";
+import { AnalyticsTab } from "./components/AnalyticsTab";
+import { BottomNav } from "./components/BottomNav";
+import { HistoryTab } from "./components/HistoryTab";
 import { TableTab } from "./components/TableTab";
 import { useSwipeTabs } from "./hooks/useSwipeTabs";
 import { currentMonth } from "./lib/budget";
 
-const TABS = [
-  { id: "table", label: "Таблица", icon: "▦" },
-  { id: "account", label: "Аккаунт", icon: "◎" },
-] as const;
+const TAB_COUNT = 5;
 
 export function BudgetApp() {
+  const bootstrap = useMutation(api.categories.bootstrap);
   const [month, setMonth] = useState(currentMonth);
-  const [sheetOpen, setSheetOpen] = useState(false);
+
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
   const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchEnd } =
-    useSwipeTabs(2);
+    useSwipeTabs(TAB_COUNT);
 
   return (
     <div className="app-shell">
@@ -26,41 +32,14 @@ export function BudgetApp() {
       >
         <div className="tab-track">
           <TableTab month={month} onMonthChange={setMonth} />
+          <HistoryTab month={month} onMonthChange={setMonth} />
+          <AddTab />
+          <AnalyticsTab month={month} onMonthChange={setMonth} />
           <AccountTab />
         </div>
       </div>
 
-      {activeTab === 0 && (
-        <button
-          type="button"
-          className="fab"
-          aria-label="Добавить операцию"
-          onClick={() => setSheetOpen(true)}
-        >
-          +
-        </button>
-      )}
-
-      <nav className="tab-bar" role="tablist">
-        {TABS.map((tab, index) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === index}
-            className={`tab-bar-item ${activeTab === index ? "active" : ""}`}
-            onClick={() => scrollToTab(index)}
-          >
-            <span className="tab-bar-icon" aria-hidden>
-              {tab.icon}
-            </span>
-            <span className="tab-bar-label">{tab.label}</span>
-          </button>
-        ))}
-      </nav>
-
-      <AddSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+      <BottomNav activeTab={activeTab} onSelect={scrollToTab} />
     </div>
   );
 }
-
