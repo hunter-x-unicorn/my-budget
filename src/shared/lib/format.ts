@@ -1,7 +1,3 @@
-export type TransactionType = "income" | "expense";
-
-export type MonthState = { year: number; month: number };
-
 const monthFormatter = new Intl.DateTimeFormat("ru-RU", {
   month: "long",
   year: "numeric",
@@ -25,31 +21,28 @@ export function formatTableDay(year: number, month: number, day: number) {
   return new Intl.DateTimeFormat("ru-RU", { day: "numeric" }).format(d);
 }
 
-export function shiftMonth(year: number, month: number, delta: number): MonthState {
-  const d = new Date(year, month + delta, 1);
-  return { year: d.getFullYear(), month: d.getMonth() };
+const dayHeaderFormatter = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  weekday: "short",
+});
+
+const listDateFormatter = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "short",
+});
+
+export function formatDayHeader(timestamp: number) {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Сегодня";
+  if (date.toDateString() === yesterday.toDateString()) return "Вчера";
+  return dayHeaderFormatter.format(date);
 }
 
-export function currentMonth(): MonthState {
-  const now = new Date();
-  return { year: now.getFullYear(), month: now.getMonth() };
-}
-
-export function toDateInputValue(timestamp: number) {
-  const d = new Date(timestamp);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-export function fromDateInputValue(value: string) {
-  const [y, m, d] = value.split("-").map(Number);
-  return new Date(y, m - 1, d, 12, 0, 0).getTime();
-}
-
-export function dateKey(year: number, month: number, day: number) {
-  return `${year}-${month}-${day}`;
+export function formatListTime(timestamp: number) {
+  return listDateFormatter.format(new Date(timestamp));
 }
 
 export function formatCellAmount(income: number, expense: number) {

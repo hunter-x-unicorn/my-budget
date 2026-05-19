@@ -1,29 +1,15 @@
 import { useMutation, useQuery } from "convex/react";
 import { useMemo } from "react";
-import { api } from "../../convex/_generated/api";
-import {
-  currentMonth,
-  formatDayHeader,
-  formatListTime,
-  formatMoney,
-  formatMonthLabel,
-  shiftMonth,
-  type MonthState,
-} from "../lib/budget";
+import { api } from "../../../convex/_generated/api";
+import { useMonth } from "../../shared/hooks/useMonth";
+import { formatDayHeader, formatListTime, formatMoney } from "../../shared/lib/budget";
+import { MonthNavigator } from "../../shared/ui/MonthNavigator";
 
-export function HistoryTab({
-  month,
-  onMonthChange,
-}: {
-  month: MonthState;
-  onMonthChange: (m: MonthState) => void;
-}) {
+export function HistoryScreen() {
+  const { month } = useMonth();
   const bundle = useQuery(api.transactions.queries.monthBundle, month);
   const transactions = bundle?.transactions;
   const remove = useMutation(api.transactions.mutations.remove);
-
-  const isCurrentMonth =
-    month.year === currentMonth().year && month.month === currentMonth().month;
 
   const grouped = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof transactions>>();
@@ -43,27 +29,7 @@ export function HistoryTab({
   return (
     <div className="tab-panel history-tab">
       <h2 className="panel-title">История</h2>
-
-      <section className="month-nav">
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => onMonthChange(shiftMonth(month.year, month.month, -1))}
-          aria-label="Предыдущий месяц"
-        >
-          ‹
-        </button>
-        <p className="month-nav-label">{formatMonthLabel(month.year, month.month)}</p>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => onMonthChange(shiftMonth(month.year, month.month, 1))}
-          aria-label="Следующий месяц"
-          disabled={isCurrentMonth}
-        >
-          ›
-        </button>
-      </section>
+      <MonthNavigator />
 
       {transactions === undefined && (
         <p className="empty-state">Загрузка…</p>

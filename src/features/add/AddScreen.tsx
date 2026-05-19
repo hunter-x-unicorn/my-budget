@@ -1,14 +1,14 @@
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import {
   fromDateInputValue,
   toDateInputValue,
   type TransactionType,
-} from "../lib/budget";
+} from "../../shared/lib/budget";
 
-export function AddTab() {
+export function AddScreen() {
   const categories = useQuery(api.categories.list);
   const create = useMutation(api.transactions.mutations.create);
 

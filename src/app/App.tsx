@@ -1,8 +1,8 @@
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-import { AuthForm } from "./AuthForm";
+import { AuthForm } from "../features/auth/AuthForm";
 import { BudgetApp } from "./BudgetApp";
-import "./auth.css";
-import "./budget.css";
+import "../features/auth/auth.css";
+import "../budget.css";
 
 export default function App() {
   return (

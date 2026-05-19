@@ -1,27 +1,16 @@
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
-import { api } from "../../convex/_generated/api";
-import {
-  currentMonth,
-  formatMoney,
-  formatMonthLabel,
-  shiftMonth,
-  type MonthState,
-} from "../lib/budget";
+import { api } from "../../../convex/_generated/api";
+import { useMonth } from "../../shared/hooks/useMonth";
+import { formatMoney } from "../../shared/lib/budget";
+import { MonthNavigator } from "../../shared/ui/MonthNavigator";
+import { SummaryStrip } from "../../shared/ui/SummaryStrip";
 
-export function AnalyticsTab({
-  month,
-  onMonthChange,
-}: {
-  month: MonthState;
-  onMonthChange: (m: MonthState) => void;
-}) {
+export function AnalyticsScreen() {
+  const { month } = useMonth();
   const bundle = useQuery(api.transactions.queries.monthBundle, month);
   const summary = bundle?.summary;
   const transactions = bundle?.transactions;
-
-  const isCurrentMonth =
-    month.year === currentMonth().year && month.month === currentMonth().month;
 
   const byCategory = useMemo(() => {
     const map = new Map<
@@ -54,42 +43,8 @@ export function AnalyticsTab({
   return (
     <div className="tab-panel analytics-tab">
       <h2 className="panel-title">Аналитика</h2>
-
-      <section className="month-nav">
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => onMonthChange(shiftMonth(month.year, month.month, -1))}
-          aria-label="Предыдущий месяц"
-        >
-          ‹
-        </button>
-        <p className="month-nav-label">{formatMonthLabel(month.year, month.month)}</p>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => onMonthChange(shiftMonth(month.year, month.month, 1))}
-          aria-label="Следующий месяц"
-          disabled={isCurrentMonth}
-        >
-          ›
-        </button>
-      </section>
-
-      <section className="summary-cards">
-        <article className="summary-card balance">
-          <span>Баланс</span>
-          <strong>{formatMoney(summary?.balance ?? 0)}</strong>
-        </article>
-        <article className="summary-card income">
-          <span>Доходы</span>
-          <strong>{formatMoney(summary?.income ?? 0)}</strong>
-        </article>
-        <article className="summary-card expense">
-          <span>Расходы</span>
-          <strong>{formatMoney(summary?.expense ?? 0)}</strong>
-        </article>
-      </section>
+      <MonthNavigator />
+      <SummaryStrip summary={summary} />
 
       <section className="analytics-section">
         <h3>Расходы по категориям</h3>
@@ -120,4 +75,3 @@ export function AnalyticsTab({
     </div>
   );
 }
-

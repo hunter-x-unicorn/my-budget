@@ -1,16 +1,15 @@
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { useMonth } from "../../shared/hooks/useMonth";
 import {
-  currentMonth,
   formatCellAmount,
   formatMoney,
-  formatMonthLabel,
   formatTableDay,
-  shiftMonth,
-  type MonthState,
-} from "../lib/budget";
+} from "../../shared/lib/budget";
+import { MonthNavigator } from "../../shared/ui/MonthNavigator";
+import { SummaryStrip } from "../../shared/ui/SummaryStrip";
 
 type Category = {
   _id: Id<"categories">;
@@ -19,20 +18,12 @@ type Category = {
   order: number;
 };
 
-export function TableTab({
-  month,
-  onMonthChange,
-}: {
-  month: MonthState;
-  onMonthChange: (m: MonthState) => void;
-}) {
+export function TableScreen() {
+  const { month } = useMonth();
   const categories = useQuery(api.categories.list);
   const bundle = useQuery(api.transactions.queries.monthBundle, month);
   const summary = bundle?.summary;
   const table = bundle?.table;
-
-  const isCurrentMonth =
-    month.year === currentMonth().year && month.month === currentMonth().month;
 
   const expenseCategories = useMemo(
     () => categories?.filter((c) => c.type === "expense") ?? [],
@@ -118,41 +109,8 @@ export function TableTab({
 
   return (
     <div className="tab-panel table-tab">
-      <section className="month-nav">
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => onMonthChange(shiftMonth(month.year, month.month, -1))}
-          aria-label="Предыдущий месяц"
-        >
-          ‹
-        </button>
-        <h2>{formatMonthLabel(month.year, month.month)}</h2>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => onMonthChange(shiftMonth(month.year, month.month, 1))}
-          aria-label="Следующий месяц"
-          disabled={isCurrentMonth}
-        >
-          ›
-        </button>
-      </section>
-
-      <section className="summary-cards summary-cards--compact">
-        <article className="summary-card balance">
-          <span>Баланс</span>
-          <strong>{formatMoney(summary?.balance ?? 0)}</strong>
-        </article>
-        <article className="summary-card income">
-          <span>+</span>
-          <strong>{formatMoney(summary?.income ?? 0, true)}</strong>
-        </article>
-        <article className="summary-card expense">
-          <span>−</span>
-          <strong>{formatMoney(summary?.expense ?? 0, true)}</strong>
-        </article>
-      </section>
+      <MonthNavigator titleAs="h2" />
+      <SummaryStrip summary={summary} compact />
 
       <div className="matrix-wrap">
         {categories === undefined && (

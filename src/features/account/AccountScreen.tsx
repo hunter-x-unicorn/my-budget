@@ -1,9 +1,9 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
-import type { TransactionType } from "../lib/budget";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import type { TransactionType } from "../../shared/types/budget";
 
 function CategorySection({
   title,
@@ -94,7 +94,7 @@ function CategorySection({
   );
 }
 
-export function AccountTab() {
+export function AccountScreen() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.current);
   const categories = useQuery(api.categories.list);
@@ -104,8 +104,7 @@ export function AccountTab() {
 
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const expense =
-    categories?.filter((c) => c.type === "expense") ?? [];
+  const expense = categories?.filter((c) => c.type === "expense") ?? [];
   const income = categories?.filter((c) => c.type === "income") ?? [];
 
   const handleAdd = async (name: string, type: TransactionType) => {
