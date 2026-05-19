@@ -1,0 +1,15 @@
+:root {
+  --color-bg: #0a0c10;
+  --color-bg-elevated: #12151c;
+  --color-bg-panel: #0e1016;
+  --color-income: #4ade80;
+  --color-income-muted: #86efac;
+  --color-expense: #f87171;
+  --color-expense-muted: #fca5a5;
+  --color-text-muted: #6b7280;
+  --color-text-secondary: #9ca3af;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --nav-height: 4.25rem;
+  --safe-bottom: env(safe-area-inset-bottom);
+  --app-max-width: 32rem;
+}

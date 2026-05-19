@@ -26,7 +26,7 @@
 | `src/shared/ui/` | MonthNavigator, SummaryStrip, BottomNav |
 | `src/shared/hooks/` | useSwipeTabs, useMonth |
 | `src/shared/lib/` | formatMoney, dates |
-| `src/styles/` | tokens, global (если вынесены) |
+| `src/styles/` | tokens.css, layout/nav/summary/… modules, index.css |
 
 ## Именование
 
