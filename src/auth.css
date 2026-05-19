@@ -1,0 +1,135 @@
+.auth-screen {
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: max(1.25rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(1.5rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+  background: linear-gradient(165deg, #0f1419 0%, #12182a 45%, #0b0d12 100%);
+}
+
+.auth-brand {
+  text-align: center;
+  padding: 2rem 0 1.5rem;
+}
+
+.auth-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.auth-brand h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.auth-brand p {
+  margin: 0;
+  color: #8b95a8;
+  font-size: 0.95rem;
+}
+
+.auth-card {
+  flex: 1;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: rgba(22, 26, 36, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.auth-card h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field span {
+  font-size: 0.8rem;
+  color: #9aa3b5;
+}
+
+.field input,
+.field select {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0a0c10;
+  color: inherit;
+  outline: none;
+  min-height: 48px;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #22c55e;
+}
+
+.error {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+.btn-primary {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  min-height: 48px;
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.btn-link {
+  margin-top: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #4ade80;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  min-height: 44px;
+}
+
+.loading-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  color: #8b95a8;
+}
