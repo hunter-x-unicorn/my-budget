@@ -63,7 +63,16 @@ export function HistoryScreen() {
                   type="button"
                   className="tx-delete"
                   aria-label="Удалить"
-                  onClick={() => void remove({ id: tx._id })}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        `Удалить операцию «${tx.categoryName}» на ${formatMoney(tx.amount)}?`,
+                      )
+                    ) {
+                      return;
+                    }
+                    void remove({ id: tx._id });
+                  }}
                 >
                   ×
                 </button>

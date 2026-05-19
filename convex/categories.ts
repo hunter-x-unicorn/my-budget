@@ -6,6 +6,7 @@ import {
   type MutationCtx,
   query,
 } from "./_generated/server";
+import { categoryHasTransactions } from "./lib/categories";
 import { getOptionalUserId, requireUserId } from "./lib/auth";
 import { categoryDocValidator, categoryType } from "./lib/validators";
 
@@ -153,29 +154,7 @@ export const remove = mutation({
       throw new ConvexError("Категория не найдена");
     }
 
-    const used = await ctx.db
-      .query("transactions")
-      .withIndex("by_category", (q) => q.eq("categoryId", id))
-      .first();
-
-    if (used !== null) {
-      throw new ConvexError(
-        "Нельзя удалить: есть операции в этой категории",
-      );
-    }
-
-    const legacyUsed = await ctx.db
-      .query("transactions")
-      .withIndex("by_user_date", (q) => q.eq("userId", userId))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("type"), category.type),
-          q.eq(q.field("category"), category.name),
-        ),
-      )
-      .first();
-
-    if (legacyUsed !== null) {
+    if (await categoryHasTransactions(ctx, userId, category)) {
       throw new ConvexError(
         "Нельзя удалить: есть операции в этой категории",
       );

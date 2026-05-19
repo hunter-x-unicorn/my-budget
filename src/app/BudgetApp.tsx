@@ -13,8 +13,14 @@ import { TAB_COUNT } from "./navigation";
 
 export function BudgetApp() {
   const bootstrap = useMutation(api.categories.bootstrap);
-  const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchEnd } =
-    useSwipeTabs(TAB_COUNT);
+  const {
+    activeTab,
+    viewportRef,
+    scrollToTab,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+  } = useSwipeTabs(TAB_COUNT);
 
   useEffect(() => {
     void bootstrap();
@@ -27,6 +33,7 @@ export function BudgetApp() {
           ref={viewportRef}
           className="tab-viewport"
           onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
           <div className="tab-track">

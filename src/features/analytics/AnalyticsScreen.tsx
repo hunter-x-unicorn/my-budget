@@ -18,7 +18,7 @@ export function AnalyticsScreen() {
       { name: string; expense: number; income: number }
     >();
     for (const tx of transactions ?? []) {
-      const key = tx.categoryId ?? tx.categoryName;
+      const key = tx.categoryId ?? `legacy:${tx.categoryName}`;
       const row = map.get(key) ?? {
         name: tx.categoryName,
         expense: 0,
