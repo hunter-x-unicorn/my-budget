@@ -1,5 +1,13 @@
 import { CHART_COLORS, type ChartSlice } from "./palette";
 
+type DonutSegment = {
+  name: string;
+  value: number;
+  path: string;
+  color: string;
+  pct: number;
+};
+
 type DonutChartProps = {
   slices: ChartSlice[];
   size?: number;
@@ -43,26 +51,20 @@ export function DonutChart({
     );
   }
 
-  const segments = slices.reduce<
-    Array<{
-      name: string;
-      value: number;
-      path: string;
-      color: string;
-      pct: number;
-    }>
-  >((acc, slice, i) => {
+  const segments: DonutSegment[] = [];
+  let startAngle = 0;
+  for (let i = 0; i < slices.length; i++) {
+    const slice = slices[i]!;
     const sweep = (slice.value / total) * 360;
-    const start = acc.angle;
-    acc.items.push({
-      ...slice,
-      path: arcPath(cx, cy, r, start, start + sweep - 0.2),
+    segments.push({
+      name: slice.name,
+      value: slice.value,
+      path: arcPath(cx, cy, r, startAngle, startAngle + sweep - 0.2),
       color: CHART_COLORS[i % CHART_COLORS.length]!,
       pct: Math.round((slice.value / total) * 100),
     });
-    acc.angle += sweep;
-    return acc;
-  }, { angle: 0, items: [] }).items;
+    startAngle += sweep;
+  }
 
   return (
     <div className="donut-wrap">
@@ -74,7 +76,7 @@ export function DonutChart({
         role="img"
         aria-label="Круговая диаграмма"
       >
-        {segments.map((seg) => (
+        {segments.map((seg: DonutSegment) => (
           <path
             key={seg.name}
             d={seg.path}
@@ -92,7 +94,7 @@ export function DonutChart({
         />
       </svg>
       <ul className="donut-legend">
-        {segments.slice(0, 8).map((seg) => (
+        {segments.slice(0, 8).map((seg: DonutSegment) => (
           <li key={seg.name}>
             <span className="donut-legend-dot" style={{ background: seg.color }} />
             <span className="donut-legend-name">{seg.name}</span>
