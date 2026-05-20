@@ -374,7 +374,7 @@
 .edit-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 100;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -415,10 +415,18 @@
   margin: 0;
 }
 
+.prompt-sheet .prompt-field {
+  margin-bottom: 1rem;
+}
+
+.prompt-sheet .prompt-field input {
+  width: 100%;
+}
+
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 110;
   display: flex;
   align-items: flex-end;
   justify-content: center;

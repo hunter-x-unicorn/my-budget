@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TAB_COUNT } from "../../app/navigation";
+import { TAB_COUNT, TAB_INDEX } from "../../app/navigation";
 
 type ScrollIntent = "horizontal" | "vertical" | null;
 
 function getTabPanel(el: EventTarget | null): HTMLElement | null {
   if (!(el instanceof HTMLElement)) return null;
   return el.closest(".tab-panel");
+}
+
+function isTableGestureTarget(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  return Boolean(
+    el.closest(".table-tab") ||
+      el.closest(".excel-grid-root") ||
+      el.closest(".excel-scroll"),
+  );
 }
 
 function panelCanScrollVertically(panel: HTMLElement, dy: number): boolean {
@@ -19,9 +28,12 @@ function panelCanScrollVertically(panel: HTMLElement, dy: number): boolean {
 export function useSwipeTabs(tabCount: number = TAB_COUNT) {
   const [activeTab, setActiveTab] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const touchStart = useRef<{ x: number; y: number; panel: HTMLElement | null } | null>(
-    null,
-  );
+  const touchStart = useRef<{
+    x: number;
+    y: number;
+    panel: HTMLElement | null;
+    inTable: boolean;
+  } | null>(null);
   const scrollIntent = useRef<ScrollIntent>(null);
   const blockTabSwipe = useRef(false);
   const isScrolling = useRef(false);
@@ -85,6 +97,7 @@ export function useSwipeTabs(tabCount: number = TAB_COUNT) {
       x: e.touches[0]!.clientX,
       y: e.touches[0]!.clientY,
       panel: getTabPanel(e.target),
+      inTable: isTableGestureTarget(e.target),
     };
   };
 
@@ -114,10 +127,12 @@ export function useSwipeTabs(tabCount: number = TAB_COUNT) {
     const dy = e.changedTouches[0]!.clientY - touchStart.current.y;
     const intent = scrollIntent.current;
     const blocked = blockTabSwipe.current;
+    const startedInTable = touchStart.current.inTable;
     touchStart.current = null;
     scrollIntent.current = null;
     blockTabSwipe.current = false;
 
+    if (activeTab === TAB_INDEX.table || startedInTable) return;
     if (blocked || intent === "vertical") return;
     if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
 

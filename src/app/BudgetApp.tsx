@@ -6,18 +6,39 @@ import { AddScreen } from "../features/add/AddScreen";
 import { AnalyticsScreen } from "../features/analytics/AnalyticsScreen";
 import { HistoryScreen } from "../features/history/HistoryScreen";
 import { TableScreen } from "../features/table/TableScreen";
-import { ManageNavProvider } from "../shared/context/ManageNavContext";
+import { HistoryEditProvider, useHistoryEdit } from "../shared/context/HistoryEditContext";
+import { ManageNavProvider, useManageNav } from "../shared/context/ManageNavContext";
 import { MonthProvider } from "../shared/hooks/MonthProvider";
 import { useHashTabs } from "../shared/hooks/useHashTabs";
 import { useSwipeTabs } from "../shared/hooks/useSwipeTabs";
 import { BottomNav } from "../shared/ui/BottomNav";
-import { TAB_COUNT } from "./navigation";
+import { TAB_COUNT, TAB_INDEX } from "./navigation";
 
 export function BudgetApp() {
+  const swipe = useSwipeTabs(TAB_COUNT);
+
+  return (
+    <MonthProvider>
+      <HistoryEditProvider>
+        <ManageNavProvider scrollToTab={swipe.scrollToTab}>
+          <BudgetAppContent swipe={swipe} />
+        </ManageNavProvider>
+      </HistoryEditProvider>
+    </MonthProvider>
+  );
+}
+
+function BudgetAppContent({
+  swipe,
+}: {
+  swipe: ReturnType<typeof useSwipeTabs>;
+}) {
   const bootstrapCategories = useMutation(api.categories.bootstrap);
   const bootstrapCurrencies = useMutation(api.currencies.bootstrap);
+  const { closeManage } = useManageNav();
+  const { editingTx } = useHistoryEdit();
   const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchMove, onTouchEnd } =
-    useSwipeTabs(TAB_COUNT);
+    swipe;
 
   useHashTabs(activeTab, scrollToTab);
 
@@ -26,29 +47,32 @@ export function BudgetApp() {
     void bootstrapCurrencies();
   }, [bootstrapCategories, bootstrapCurrencies]);
 
-  return (
-    <MonthProvider>
-      <ManageNavProvider scrollToTab={scrollToTab}>
-        <div className="app-shell">
-          <div
-            ref={viewportRef}
-            className="tab-viewport"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            <div className="tab-track">
-              <TableScreen />
-              <HistoryScreen />
-              <AddScreen />
-              <AnalyticsScreen />
-              <AccountScreen />
-            </div>
-          </div>
+  const handleNavSelect = (index: number) => {
+    closeManage();
+    scrollToTab(index);
+  };
 
-          <BottomNav activeTab={activeTab} onSelect={scrollToTab} />
+  return (
+    <div className="app-shell">
+      <div
+        ref={viewportRef}
+        className="tab-viewport"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="tab-track">
+          <TableScreen />
+          <HistoryScreen isActive={activeTab === TAB_INDEX.history} />
+          <AddScreen />
+          <AnalyticsScreen />
+          <AccountScreen />
         </div>
-      </ManageNavProvider>
-    </MonthProvider>
+      </div>
+
+      {editingTx === null && (
+        <BottomNav activeTab={activeTab} onSelect={handleNavSelect} />
+      )}
+    </div>
   );
 }

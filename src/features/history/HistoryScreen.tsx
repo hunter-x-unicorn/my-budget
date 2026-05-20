@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import { useHistoryEdit, type HistoryEditTx } from "../../shared/context/HistoryEditContext";
 import { useMonth } from "../../shared/hooks/useMonth";
 import { formatDayHeader, formatListTime, formatMoney } from "../../shared/lib/budget";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
@@ -27,30 +27,21 @@ const MONTH_NAMES = [
   "Декабрь",
 ];
 
-type TxRow = {
-  _id: Id<"transactions">;
-  type: "income" | "expense" | "transfer";
-  amount: number;
-  categoryId?: Id<"categories">;
-  categoryName: string;
-  currencyId?: Id<"currencies">;
+type TxRow = HistoryEditTx & {
   currencySymbol?: string;
-  tagIds?: Id<"tags">[];
   tagNames?: string[];
-  note?: string;
-  date: number;
 };
 
-export function HistoryScreen() {
+export function HistoryScreen({ isActive }: { isActive: boolean }) {
   const { month } = useMonth();
   const transactions = useQuery(api.transactions.queries.historyList);
   const remove = useMutation(api.transactions.mutations.remove);
   const update = useMutation(api.transactions.mutations.update);
+  const { editingTx, setEditingTx } = useHistoryEdit();
 
-  const [editingTx, setEditingTx] = useState<TxRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TxRow | null>(null);
   const monthRefs = useRef<Map<string, HTMLElement>>(new Map());
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const grouped = useMemo(() => {
     const monthMap = new Map<
@@ -83,17 +74,28 @@ export function HistoryScreen() {
   }, [transactions]);
 
   useEffect(() => {
+    if (!isActive) return;
+    const panel = panelRef.current;
     const targetKey = `${month.year}-${month.month}`;
     const el = monthRefs.current.get(targetKey);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [month, grouped.length]);
+    if (!panel || !el) return;
+
+    const sticky = panel.querySelector(".history-sticky-head");
+    const offset = sticky instanceof HTMLElement ? sticky.offsetHeight : 0;
+    panel.scrollTo({
+      top: Math.max(0, el.offsetTop - offset - 8),
+      behavior: "smooth",
+    });
+  }, [month, isActive, grouped.length]);
+
+  const showEditSheet = isActive && editingTx !== null;
 
   return (
-    <div className="tab-panel history-tab" ref={scrollRef}>
-      <h2 className="panel-title">История</h2>
-      <MonthNavigator />
+    <div className="tab-panel history-tab" ref={panelRef}>
+      <div className="history-sticky-head">
+        <h2 className="panel-title">История</h2>
+        <MonthNavigator />
+      </div>
 
       {transactions === undefined && <p className="empty-state">Загрузка…</p>}
 
@@ -156,7 +158,7 @@ export function HistoryScreen() {
         </section>
       ))}
 
-      {editingTx && (
+      {showEditSheet && editingTx && (
         <TransactionFormSheet
           title="Редактировать"
           subtitle={editingTx.categoryName}

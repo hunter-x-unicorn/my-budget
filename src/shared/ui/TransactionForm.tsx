@@ -10,6 +10,7 @@ import {
   type TransactionType,
 } from "../lib/budget";
 import { ChipButton } from "./ChipButton";
+import { PromptSheet } from "./PromptSheet";
 import { SectionHeader } from "./SectionHeader";
 
 const TAGS_HELP_TITLE = "Детализация (Теги)";
@@ -78,6 +79,8 @@ export function TransactionForm({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categoryPromptOpen, setCategoryPromptOpen] = useState(false);
+  const [tagPromptOpen, setTagPromptOpen] = useState(false);
 
   const currencyPickerRef = useRef<HTMLDialogElement>(null);
   const tagsHelpRef = useRef<HTMLDialogElement>(null);
@@ -127,27 +130,25 @@ export function TransactionForm({
     }
   }
 
-  async function handleAddCategory() {
+  async function handleAddCategory(name: string) {
     if (type === "transfer") return;
-    const name = window.prompt("Название категории");
-    if (!name?.trim()) return;
     try {
       const id = await createCategory({
-        name: name.trim(),
+        name,
         type: type === "income" ? "income" : "expense",
       });
       setCategoryId(id);
+      setCategoryPromptOpen(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Не удалось создать категорию");
     }
   }
 
-  async function handleAddTag() {
-    const name = window.prompt("Название тега");
-    if (!name?.trim()) return;
+  async function handleAddTag(name: string) {
     try {
-      const id = await createTag({ name: name.trim() });
+      const id = await createTag({ name });
       setSelectedTagIds((prev) => new Set(prev).add(id));
+      setTagPromptOpen(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Не удалось создать тег");
     }
@@ -228,7 +229,10 @@ export function TransactionForm({
         }}
       >
         <div className="form-section">
-          <SectionHeader label="Валюта" onReorder={() => openManage("currency")} />
+          <SectionHeader
+            label="Валюта"
+            onReorder={() => openManage("currency", { navigate: true })}
+          />
           <div className="chip-row chip-row--currency">
             {currencies?.map((c) => (
               <ChipButton
@@ -267,7 +271,10 @@ export function TransactionForm({
 
         {type !== "transfer" && (
           <div className="form-section">
-            <SectionHeader label="Категория" onReorder={() => openManage("category")} />
+            <SectionHeader
+              label="Категория"
+              onReorder={() => openManage("category", { navigate: true })}
+            />
             <div className="chip-grid">
               {filteredCategories.map((c) => (
                 <ChipButton
@@ -279,7 +286,10 @@ export function TransactionForm({
                   {c.name}
                 </ChipButton>
               ))}
-              <ChipButton className="chip-btn--add" onClick={() => void handleAddCategory()}>
+              <ChipButton
+                className="chip-btn--add"
+                onClick={() => setCategoryPromptOpen(true)}
+              >
                 +
               </ChipButton>
             </div>
@@ -310,7 +320,7 @@ export function TransactionForm({
                   i
                 </button>
               }
-              onReorder={() => openManage("tags")}
+              onReorder={() => openManage("tags", { navigate: true })}
             />
             <div className="chip-grid">
               {tags?.map((t) => (
@@ -322,7 +332,7 @@ export function TransactionForm({
                   {t.name}
                 </ChipButton>
               ))}
-              <ChipButton className="chip-btn--add" onClick={() => void handleAddTag()}>
+              <ChipButton className="chip-btn--add" onClick={() => setTagPromptOpen(true)}>
                 +
               </ChipButton>
             </div>
@@ -380,6 +390,22 @@ export function TransactionForm({
           Закрыть
         </button>
       </dialog>
+
+      <PromptSheet
+        open={categoryPromptOpen}
+        title="Новая категория"
+        placeholder="Например: Еда"
+        onCancel={() => setCategoryPromptOpen(false)}
+        onSubmit={(name) => void handleAddCategory(name)}
+      />
+
+      <PromptSheet
+        open={tagPromptOpen}
+        title="Новый тег"
+        placeholder="Например: Жена"
+        onCancel={() => setTagPromptOpen(false)}
+        onSubmit={(name) => void handleAddTag(name)}
+      />
 
       <dialog ref={tagsHelpRef} className="app-dialog">
         <p className="app-dialog-title">{TAGS_HELP_TITLE}</p>

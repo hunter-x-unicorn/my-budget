@@ -66,7 +66,7 @@ export function AccountScreen() {
         <button
           type="button"
           className="account-menu-row"
-          onClick={() => openManage("currency")}
+          onClick={() => openManage("currency", { navigate: false })}
         >
           <span>Валюта</span>
           <span className="account-menu-chevron" aria-hidden>
@@ -77,7 +77,7 @@ export function AccountScreen() {
         <button
           type="button"
           className="account-menu-row"
-          onClick={() => openManage("category")}
+          onClick={() => openManage("category", { navigate: false })}
         >
           <span>Категория</span>
           <span className="account-menu-chevron" aria-hidden>
@@ -88,7 +88,7 @@ export function AccountScreen() {
         <button
           type="button"
           className="account-menu-row"
-          onClick={() => openManage("tags")}
+          onClick={() => openManage("tags", { navigate: false })}
         >
           <span>Детализация (теги)</span>
           <span className="account-menu-chevron" aria-hidden>

@@ -1,3 +1,21 @@
+.history-tab {
+  padding-top: 0;
+}
+
+.history-sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 0 0.5rem;
+  background: var(--color-bg);
+  box-shadow: 0 6px 16px rgba(10, 12, 16, 0.85);
+}
+
+.history-sticky-head .panel-title {
+  margin-bottom: 0.5rem;
+}
+
 .history-month {
   margin-bottom: 1.25rem;
 }

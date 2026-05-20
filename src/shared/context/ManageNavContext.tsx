@@ -12,7 +12,8 @@ export type ManageKind = "currency" | "category" | "tags";
 
 type ManageNavContextValue = {
   manageKind: ManageKind | null;
-  openManage: (kind: ManageKind) => void;
+  /** navigate: true — перейти на вкладку «Аккаунт» (из «Упорядочить» на других вкладках). */
+  openManage: (kind: ManageKind, options?: { navigate?: boolean }) => void;
   closeManage: () => void;
 };
 
@@ -28,9 +29,11 @@ export function ManageNavProvider({
   const [manageKind, setManageKind] = useState<ManageKind | null>(null);
 
   const openManage = useCallback(
-    (kind: ManageKind) => {
+    (kind: ManageKind, options?: { navigate?: boolean }) => {
       setManageKind(kind);
-      scrollToTab(TAB_INDEX.account);
+      if (options?.navigate === true) {
+        scrollToTab(TAB_INDEX.account);
+      }
     },
     [scrollToTab],
   );
