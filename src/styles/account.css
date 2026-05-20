@@ -1,64 +1,106 @@
 .account-tab {
-  padding-bottom: 2rem;
+  padding-bottom: 0;
 }
 
-.account-header {
-  margin-bottom: 1.25rem;
-}
-
-.account-header h2 {
-  margin: 0 0 0.35rem;
-  font-size: 1.35rem;
-}
-
-.account-email {
-  margin: 0 0 1rem;
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
+.account-email-top {
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e8eaef;
   word-break: break-all;
 }
 
-.account-error {
-  margin-bottom: 1rem;
-}
-
-.btn-secondary {
-  border: none;
-  border-radius: 0.75rem;
-  padding: 0.85rem 1rem;
-  min-height: 48px;
-  cursor: pointer;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5e7eb;
-}
-
-.btn-secondary--full {
-  width: 100%;
-}
-
-.category-section {
+.account-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   margin-bottom: 1.5rem;
 }
 
-.category-section h3 {
-  margin: 0 0 0.65rem;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.account-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
 }
 
-.category-list {
+.account-menu-row:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.account-menu-row--muted {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.account-menu-row--muted:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.account-row-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.account-row-icon-placeholder {
+  width: 1.35rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.account-menu-chevron {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.account-signout {
+  margin-top: 0.5rem;
+}
+
+/* --- Manage sub-screen --- */
+.manage-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 100%;
+}
+
+.manage-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.manage-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.manage-list {
   list-style: none;
-  margin: 0 0 0.75rem;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-.category-item {
+.manage-item {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -68,13 +110,13 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.category-reorder {
+.manage-reorder {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-.category-name {
+.manage-item-label {
   flex: 1;
   font-weight: 500;
   font-size: 0.95rem;
@@ -83,17 +125,10 @@
   text-align: left;
   cursor: pointer;
   padding: 0;
+  color: inherit;
 }
 
-.category-name--expense {
-  color: #fecaca;
-}
-
-.category-name--income {
-  color: #bbf7d0;
-}
-
-.category-delete {
+.manage-item-delete {
   width: 2.25rem;
   height: 2.25rem;
   border: none;
@@ -104,17 +139,26 @@
   cursor: pointer;
 }
 
-.category-delete:active {
+.manage-item-delete:active {
   color: var(--color-expense);
   background: rgba(239, 68, 68, 0.12);
 }
 
-.category-add {
-  display: flex;
-  gap: 0.5rem;
+.manage-group-label {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.category-add input {
+.manage-add-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.manage-add-form input {
   flex: 1;
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
@@ -122,4 +166,8 @@
   background: var(--color-bg);
   color: inherit;
   min-height: 48px;
+}
+
+.manage-add-block {
+  margin-top: 0.5rem;
 }

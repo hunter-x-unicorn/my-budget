@@ -1,7 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
-import { AddTransactionForm } from "./AddTransactionForm";
+import { TransactionForm } from "../../shared/ui/TransactionForm";
 
 export function AddScreen() {
   const create = useMutation(api.transactions.mutations.create);
@@ -12,8 +12,9 @@ export function AddScreen() {
     <div className="tab-panel add-tab">
       <h2 className="panel-title">Новая операция</h2>
 
-      <AddTransactionForm
+      <TransactionForm
         key={formKey}
+        submitLabel="Сохранить"
         onSubmit={async (values) => {
           setSuccess(false);
           await create(values);

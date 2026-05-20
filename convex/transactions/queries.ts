@@ -8,6 +8,7 @@ import {
   tableCellValidator,
   transactionRowValidator,
 } from "../lib/validators";
+import { enrichTransactionRows } from "./mapRows";
 import { buildSummary, buildTableForMonth } from "./table";
 
 export const monthBundle = query({
@@ -39,54 +40,7 @@ export const monthBundle = query({
       .order("desc")
       .collect();
 
-    const categories = await ctx.db
-      .query("categories")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    const nameById = new Map(categories.map((c) => [c._id, c.name]));
-
-    const currencyRows = await ctx.db
-      .query("currencies")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    const currencyById = new Map(currencyRows.map((c) => [c._id, c]));
-
-    const tagRows = await ctx.db
-      .query("tags")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    const tagNameById = new Map(tagRows.map((t) => [t._id, t.name]));
-
-    const transactions = rows.map((row) => {
-      const legacyName =
-        "category" in row && typeof row.category === "string" ? row.category : undefined;
-      const currency = row.currencyId ? currencyById.get(row.currencyId) : undefined;
-      const tagNames =
-        row.tagIds
-          ?.map((id) => tagNameById.get(id))
-          .filter((n): n is string => n !== undefined) ?? undefined;
-
-      return {
-        _id: row._id,
-        _creationTime: row._creationTime,
-        userId: row.userId,
-        type: row.type,
-        amount: row.amount,
-        categoryId: row.categoryId,
-        categoryName:
-          row.type === "transfer"
-            ? "Перевод"
-            : row.categoryId
-              ? (nameById.get(row.categoryId) ?? "—")
-              : (legacyName ?? "—"),
-        currencyId: row.currencyId,
-        currencyCode: currency?.code,
-        currencySymbol: currency?.symbol,
-        tagNames: tagNames?.length ? tagNames : undefined,
-        note: row.note,
-        date: row.date,
-      };
-    });
+    const transactions = await enrichTransactionRows(ctx, userId, rows);
 
     const tableRows = rows.filter(
       (
@@ -100,5 +54,23 @@ export const monthBundle = query({
       summary: buildSummary(rows),
       table: buildTableForMonth(year, month, tableRows),
     };
+  },
+});
+
+/** All operations for history (newest first). */
+export const historyList = query({
+  args: {},
+  returns: v.array(transactionRowValidator),
+  handler: async (ctx) => {
+    const userId = await getOptionalUserId(ctx);
+    if (userId === null) return [];
+
+    const rows = await ctx.db
+      .query("transactions")
+      .withIndex("by_user_date", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(2000);
+
+    return await enrichTransactionRows(ctx, userId, rows);
   },
 });

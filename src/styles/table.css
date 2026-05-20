@@ -1,113 +1,159 @@
-.matrix-wrap {
+.excel-grid-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.excel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.excel-zoom-label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.excel-tool-btn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.excel-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.excel-scroll {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: 0.75rem;
   border: 1px solid var(--color-border);
-  max-height: calc(100dvh - 14rem);
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
-.matrix-table {
-  border-collapse: collapse;
-  font-size: 0.7rem;
+.excel-scale {
+  display: inline-block;
   min-width: 100%;
 }
 
-.matrix-table th,
-.matrix-table td {
+.excel-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.75rem;
+}
+
+.excel-table th,
+.excel-table td {
   border: 1px solid var(--color-border);
-  padding: 0.35rem 0.4rem;
+  padding: 0;
   text-align: center;
   vertical-align: middle;
+  min-width: 2.75rem;
+  height: 2.25rem;
 }
 
-.matrix-corner {
+.excel-corner {
   position: sticky;
   left: 0;
-  z-index: 3;
+  top: 0;
+  z-index: 4;
   background: var(--color-bg-elevated);
   text-align: left;
-  min-width: 6.5rem;
+  padding: 0.4rem 0.55rem !important;
+  min-width: 7rem;
   font-weight: 600;
   color: var(--color-text-secondary);
 }
 
-.matrix-date {
-  min-width: 2rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-elevated);
+.excel-date {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
+  background: var(--color-bg-elevated);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 0.35rem 0.25rem !important;
 }
 
-.matrix-cat {
+.excel-cat {
   position: sticky;
   left: 0;
-  z-index: 1;
+  z-index: 2;
   background: var(--color-bg-panel);
   text-align: left;
+  padding: 0.35rem 0.5rem !important;
   font-weight: 500;
   white-space: nowrap;
-  max-width: 7rem;
+  max-width: 8rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-left: 0.5rem !important;
 }
 
-.matrix-cat--expense {
+.excel-cat--expense {
   color: var(--color-expense-muted);
 }
 
-.matrix-cat--income {
+.excel-cat--income {
   color: var(--color-income-muted);
 }
 
-.matrix-cat-icon {
-  opacity: 0.7;
-  margin-right: 0.2rem;
-}
-
-.matrix-section td {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--color-text-muted);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-align: left;
-  padding: 0.4rem 0.5rem;
-  position: sticky;
-  left: 0;
-}
-
-.matrix-cell {
-  min-width: 2.1rem;
-  height: 2.1rem;
+.excel-cell {
   background: rgba(0, 0, 0, 0.2);
+  cursor: cell;
+  user-select: none;
 }
 
-.matrix-cell.has-income {
-  background: rgba(34, 197, 94, 0.08);
+.excel-cell--selected {
+  outline: 2px solid rgba(96, 165, 250, 0.7);
+  outline-offset: -2px;
+  background: rgba(96, 165, 250, 0.12);
 }
 
-.matrix-cell.has-expense {
-  background: rgba(239, 68, 68, 0.06);
+.excel-cell--expense.has-value {
+  color: var(--color-expense);
 }
 
-.matrix-cell-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.05rem;
-  line-height: 1.15;
-  font-weight: 600;
-  font-size: 0.62rem;
-}
-
-.cell-income {
+.excel-cell--income.has-value {
   color: var(--color-income);
 }
 
-.cell-expense {
-  color: var(--color-expense);
+.excel-cell-value {
+  display: block;
+  padding: 0.25rem;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.excel-cell-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #1e2430;
+  color: inherit;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem;
+  min-width: 2.5rem;
+}
+
+.table-tab {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }

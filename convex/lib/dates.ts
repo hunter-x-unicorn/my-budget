@@ -34,6 +34,24 @@ export function dayKeyFromTimestamp(timestamp: number) {
   return toDayKey(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+export function timestampFromDayKey(key: string) {
+  const parts = key.split("-").map(Number);
+  if (parts.length !== 3) {
+    throw new ConvexError("Некорректная дата");
+  }
+  const [year, month, day] = parts;
+  assertMonthArgs(year, month);
+  return new Date(year, month, day, 12, 0, 0, 0).getTime();
+}
+
+export function dayRangeFromKey(key: string) {
+  const parts = key.split("-").map(Number);
+  const [year, month, day] = parts;
+  const start = new Date(year, month, day, 0, 0, 0, 0).getTime();
+  const end = new Date(year, month, day, 23, 59, 59, 999).getTime();
+  return { start, end };
+}
+
 export function datesInMonth(year: number, month: number): string[] {
   assertMonthArgs(year, month);
   const daysInMonth = new Date(year, month + 1, 0).getDate();

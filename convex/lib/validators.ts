@@ -37,6 +37,7 @@ export const transactionRowValidator = v.object({
   currencyId: v.optional(v.id("currencies")),
   currencyCode: v.optional(v.string()),
   currencySymbol: v.optional(v.string()),
+  tagIds: v.optional(v.array(v.id("tags"))),
   tagNames: v.optional(v.array(v.string())),
   note: v.optional(v.string()),
   date: v.number(),

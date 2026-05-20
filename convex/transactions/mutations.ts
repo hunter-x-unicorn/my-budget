@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, type MutationCtx } from "../_generated/server";
 import { requireUserId } from "../lib/auth";
+import { dayRangeFromKey, timestampFromDayKey } from "../lib/dates";
 import { transactionType } from "../lib/validators";
 
 type TransactionInput = {
@@ -116,6 +117,58 @@ export const update = mutation({
       tagIds: args.tagIds?.length ? args.tagIds : undefined,
       note: args.note?.trim() || undefined,
       date: args.date,
+    });
+    return null;
+  },
+});
+
+/** Replace all operations in a category+day cell with one amount (or clear). */
+export const setCellAmount = mutation({
+  args: {
+    categoryId: v.id("categories"),
+    dateKey: v.string(),
+    amount: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { categoryId, dateKey, amount }) => {
+    const userId = await requireUserId(ctx);
+    const category = await ctx.db.get(categoryId);
+    if (category === null || category.userId !== userId) {
+      throw new ConvexError("Категория не найдена");
+    }
+
+    const { start, end } = dayRangeFromKey(dateKey);
+    const existing = await ctx.db
+      .query("transactions")
+      .withIndex("by_user_date", (q) =>
+        q.eq("userId", userId).gte("date", start).lte("date", end),
+      )
+      .collect();
+
+    for (const row of existing) {
+      if (row.categoryId === categoryId) {
+        await ctx.db.delete(row._id);
+      }
+    }
+
+    const rounded = Math.round(amount * 100) / 100;
+    if (rounded <= 0) return null;
+
+    const defaultCurrency = await ctx.db
+      .query("currencies")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (defaultCurrency === null) {
+      throw new ConvexError("Добавьте валюту в настройках");
+    }
+
+    await ctx.db.insert("transactions", {
+      userId,
+      type: category.type,
+      amount: rounded,
+      categoryId,
+      currencyId: defaultCurrency._id,
+      date: timestampFromDayKey(dateKey),
     });
     return null;
   },

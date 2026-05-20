@@ -1,3 +1,15 @@
+.history-month {
+  margin-bottom: 1.25rem;
+}
+
+.history-month-label {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e8eaef;
+  scroll-margin-top: 0.5rem;
+}
+
 .day-group {
   margin-bottom: 1rem;
 }
