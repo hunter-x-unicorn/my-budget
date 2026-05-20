@@ -8,13 +8,12 @@ import {
 } from "react";
 import { TAB_INDEX } from "../../app/navigation";
 
-export type ManageKind = "currency" | "category" | "tags";
+export type AccountSubview = "currency" | "category" | "tags";
 
 type ManageNavContextValue = {
-  manageKind: ManageKind | null;
-  /** navigate: true — перейти на вкладку «Аккаунт» (из «Упорядочить» на других вкладках). */
-  openManage: (kind: ManageKind, options?: { navigate?: boolean }) => void;
-  closeManage: () => void;
+  subview: AccountSubview | null;
+  openSubview: (view: AccountSubview, options?: { navigate?: boolean }) => void;
+  closeSubview: () => void;
 };
 
 const ManageNavContext = createContext<ManageNavContextValue | null>(null);
@@ -26,11 +25,11 @@ export function ManageNavProvider({
   children: ReactNode;
   scrollToTab: (index: number) => void;
 }) {
-  const [manageKind, setManageKind] = useState<ManageKind | null>(null);
+  const [subview, setSubview] = useState<AccountSubview | null>(null);
 
-  const openManage = useCallback(
-    (kind: ManageKind, options?: { navigate?: boolean }) => {
-      setManageKind(kind);
+  const openSubview = useCallback(
+    (view: AccountSubview, options?: { navigate?: boolean }) => {
+      setSubview(view);
       if (options?.navigate === true) {
         scrollToTab(TAB_INDEX.account);
       }
@@ -38,11 +37,11 @@ export function ManageNavProvider({
     [scrollToTab],
   );
 
-  const closeManage = useCallback(() => setManageKind(null), []);
+  const closeSubview = useCallback(() => setSubview(null), []);
 
   const value = useMemo(
-    () => ({ manageKind, openManage, closeManage }),
-    [manageKind, openManage, closeManage],
+    () => ({ subview, openSubview, closeSubview }),
+    [subview, openSubview, closeSubview],
   );
 
   return (
@@ -57,3 +56,6 @@ export function useManageNav() {
   }
   return ctx;
 }
+
+/** @deprecated use openSubview */
+export type ManageKind = AccountSubview;

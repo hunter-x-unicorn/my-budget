@@ -70,28 +70,56 @@
   margin-top: 0.5rem;
 }
 
-/* --- Manage sub-screen --- */
-.manage-screen {
+/* --- Account editors (currency / category / tags) --- */
+.account-editor {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   min-height: 100%;
+  padding-bottom: 1rem;
 }
 
-.manage-header {
+.account-editor-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.25rem;
 }
 
-.manage-title {
+.account-editor-title {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
 }
 
-.manage-list {
+.account-editor-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.account-editor-section {
+  margin-top: 0.5rem;
+}
+
+.account-editor-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.account-editor-section-head h3,
+.account-editor-section h3 {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.drag-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -100,74 +128,96 @@
   gap: 0.4rem;
 }
 
-.manage-item {
+.drag-item {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.5rem 0.65rem;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
   border-radius: 0.75rem;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
 }
 
-.manage-reorder {
+.drag-item--dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.drag-item--over {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+.drag-item--expense.drag-item--over {
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.drag-item--income.drag-item--over {
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  user-select: none;
+  padding: 0 0.15rem;
+}
+
+.drag-label {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-}
-
-.manage-item-label {
-  flex: 1;
-  font-weight: 500;
-  font-size: 0.95rem;
+  align-items: flex-start;
+  gap: 0.1rem;
   border: none;
   background: transparent;
   text-align: left;
   cursor: pointer;
-  padding: 0;
+  padding: 0.15rem 0;
   color: inherit;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
-.manage-item-delete {
+.drag-label:disabled {
+  cursor: default;
+}
+
+.drag-sublabel {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.drag-rename-input {
+  flex: 1;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  background: var(--color-bg);
+  color: inherit;
+  font-size: 0.95rem;
+  min-height: 40px;
+}
+
+.drag-delete {
   width: 2.25rem;
   height: 2.25rem;
   border: none;
   border-radius: 0.5rem;
   background: transparent;
   color: var(--color-text-muted);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
+  line-height: 1;
   cursor: pointer;
 }
 
-.manage-item-delete:active {
+.drag-delete:active {
   color: var(--color-expense);
   background: rgba(239, 68, 68, 0.12);
-}
-
-.manage-group-label {
-  margin: 0.75rem 0 0.35rem;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.manage-add-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.manage-add-form input {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: var(--color-bg);
-  color: inherit;
-  min-height: 48px;
-}
-
-.manage-add-block {
-  margin-top: 0.5rem;
 }

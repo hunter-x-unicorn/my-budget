@@ -176,6 +176,36 @@ export const remove = mutation({
   },
 });
 
+export const reorder = mutation({
+  args: {
+    orderedIds: v.array(v.id("currencies")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { orderedIds }) => {
+    const userId = await requireUserId(ctx);
+    const siblings = await ctx.db
+      .query("currencies")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    if (orderedIds.length !== siblings.length) {
+      throw new ConvexError("Неверный список валют");
+    }
+
+    const idSet = new Set(siblings.map((c) => c._id));
+    for (const id of orderedIds) {
+      if (!idSet.has(id)) {
+        throw new ConvexError("Валюта не найдена");
+      }
+    }
+
+    for (let i = 0; i < orderedIds.length; i++) {
+      await ctx.db.patch(orderedIds[i]!, { order: i });
+    }
+    return null;
+  },
+});
+
 export const move = mutation({
   args: {
     id: v.id("currencies"),

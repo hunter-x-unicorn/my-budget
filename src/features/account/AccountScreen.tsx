@@ -1,9 +1,14 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { api } from "../../../convex/_generated/api";
-import { useManageNav } from "../../shared/context/ManageNavContext";
-import { ManageScreen } from "./ManageScreen";
+import {
+  useManageNav,
+  type AccountSubview,
+} from "../../shared/context/ManageNavContext";
+import { CategoryManageView } from "./CategoryManageView";
+import { CurrencyManageView } from "./CurrencyManageView";
+import { TagManageView } from "./TagManageView";
 
 function IconMoon() {
   return (
@@ -32,14 +37,24 @@ function IconSun() {
   );
 }
 
+const SUBVIEW_VIEWS: Record<
+  AccountSubview,
+  ComponentType<{ onBack: () => void }>
+> = {
+  currency: CurrencyManageView,
+  category: CategoryManageView,
+  tags: TagManageView,
+};
+
 export function AccountScreen() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.current);
-  const { manageKind, openManage, closeManage } = useManageNav();
+  const { subview, openSubview, closeSubview } = useManageNav();
   const [lightTheme, setLightTheme] = useState(false);
 
-  if (manageKind !== null) {
-    return <ManageScreen kind={manageKind} onBack={closeManage} />;
+  if (subview !== null) {
+    const View = SUBVIEW_VIEWS[subview];
+    return <View onBack={closeSubview} />;
   }
 
   return (
@@ -66,7 +81,7 @@ export function AccountScreen() {
         <button
           type="button"
           className="account-menu-row"
-          onClick={() => openManage("currency", { navigate: false })}
+          onClick={() => openSubview("currency")}
         >
           <span>Валюта</span>
           <span className="account-menu-chevron" aria-hidden>
@@ -77,7 +92,7 @@ export function AccountScreen() {
         <button
           type="button"
           className="account-menu-row"
-          onClick={() => openManage("category", { navigate: false })}
+          onClick={() => openSubview("category")}
         >
           <span>Категория</span>
           <span className="account-menu-chevron" aria-hidden>
@@ -88,7 +103,7 @@ export function AccountScreen() {
         <button
           type="button"
           className="account-menu-row"
-          onClick={() => openManage("tags", { navigate: false })}
+          onClick={() => openSubview("tags")}
         >
           <span>Детализация (теги)</span>
           <span className="account-menu-chevron" aria-hidden>

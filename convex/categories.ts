@@ -193,7 +193,9 @@ export const remove = mutation({
     }
 
     if (await categoryHasTransactions(ctx, category)) {
-      throw new ConvexError("Нельзя удалить: есть операции в этой категории");
+      throw new ConvexError(
+        "Нельзя удалить категорию, пока в ней есть операции",
+      );
     }
 
     await ctx.db.delete(id);
@@ -208,6 +210,37 @@ export const remove = mutation({
     const sorted = siblings.sort((a, b) => a.order - b.order);
     for (let i = 0; i < sorted.length; i++) {
       await ctx.db.patch(sorted[i]!._id, { order: i });
+    }
+    return null;
+  },
+});
+
+export const reorder = mutation({
+  args: {
+    type: categoryType,
+    orderedIds: v.array(v.id("categories")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { type, orderedIds }) => {
+    const userId = await requireUserId(ctx);
+    const siblings = await ctx.db
+      .query("categories")
+      .withIndex("by_user_type", (q) => q.eq("userId", userId).eq("type", type))
+      .collect();
+
+    if (orderedIds.length !== siblings.length) {
+      throw new ConvexError("Неверный список категорий");
+    }
+
+    const idSet = new Set(siblings.map((c) => c._id));
+    for (const id of orderedIds) {
+      if (!idSet.has(id)) {
+        throw new ConvexError("Категория не найдена");
+      }
+    }
+
+    for (let i = 0; i < orderedIds.length; i++) {
+      await ctx.db.patch(orderedIds[i]!, { order: i });
     }
     return null;
   },

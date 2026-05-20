@@ -52,7 +52,7 @@ export function TransactionForm({
   onSubmit,
   onCancel,
 }: TransactionFormProps) {
-  const { openManage } = useManageNav();
+  const { openSubview } = useManageNav();
   const categories = useQuery(api.categories.list);
   const currencies = useQuery(api.currencies.list);
   const tags = useQuery(api.tags.list);
@@ -231,7 +231,7 @@ export function TransactionForm({
         <div className="form-section">
           <SectionHeader
             label="Валюта"
-            onReorder={() => openManage("currency", { navigate: true })}
+            onReorder={() => openSubview("currency", { navigate: true })}
           />
           <div className="chip-row chip-row--currency">
             {currencies?.map((c) => (
@@ -273,7 +273,7 @@ export function TransactionForm({
           <div className="form-section">
             <SectionHeader
               label="Категория"
-              onReorder={() => openManage("category", { navigate: true })}
+              onReorder={() => openSubview("category", { navigate: true })}
             />
             <div className="chip-grid">
               {filteredCategories.map((c) => (
@@ -320,7 +320,7 @@ export function TransactionForm({
                   i
                 </button>
               }
-              onReorder={() => openManage("tags", { navigate: true })}
+              onReorder={() => openSubview("tags", { navigate: true })}
             />
             <div className="chip-grid">
               {tags?.map((t) => (

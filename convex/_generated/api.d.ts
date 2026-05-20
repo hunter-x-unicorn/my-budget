@@ -18,6 +18,7 @@ import type * as lib_dates from "../lib/dates.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
 import type * as tags from "../tags.js";
+import type * as transactions_analytics from "../transactions/analytics.js";
 import type * as transactions_mapRows from "../transactions/mapRows.js";
 import type * as transactions_mutations from "../transactions/mutations.js";
 import type * as transactions_queries from "../transactions/queries.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "lib/validators": typeof lib_validators;
   migrations: typeof migrations;
   tags: typeof tags;
+  "transactions/analytics": typeof transactions_analytics;
   "transactions/mapRows": typeof transactions_mapRows;
   "transactions/mutations": typeof transactions_mutations;
   "transactions/queries": typeof transactions_queries;

@@ -35,7 +35,7 @@ function BudgetAppContent({
 }) {
   const bootstrapCategories = useMutation(api.categories.bootstrap);
   const bootstrapCurrencies = useMutation(api.currencies.bootstrap);
-  const { closeManage } = useManageNav();
+  const { closeSubview } = useManageNav();
   const { editingTx } = useHistoryEdit();
   const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchMove, onTouchEnd } =
     swipe;
@@ -48,7 +48,7 @@ function BudgetAppContent({
   }, [bootstrapCategories, bootstrapCurrencies]);
 
   const handleNavSelect = (index: number) => {
-    closeManage();
+    closeSubview();
     scrollToTab(index);
   };
 
