@@ -54,7 +54,11 @@ export function AccountScreen() {
 
   if (subview !== null) {
     const View = SUBVIEW_VIEWS[subview];
-    return <View onBack={closeSubview} />;
+    return (
+      <div className="tab-panel account-tab">
+        <View onBack={closeSubview} />
+      </div>
+    );
   }
 
   return (

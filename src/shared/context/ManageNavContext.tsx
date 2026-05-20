@@ -29,10 +29,9 @@ export function ManageNavProvider({
 
   const openSubview = useCallback(
     (view: AccountSubview, options?: { navigate?: boolean }) => {
+      void options;
       setSubview(view);
-      if (options?.navigate === true) {
-        scrollToTab(TAB_INDEX.account);
-      }
+      scrollToTab(TAB_INDEX.account);
     },
     [scrollToTab],
   );

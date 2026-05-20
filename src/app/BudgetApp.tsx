@@ -35,7 +35,7 @@ function BudgetAppContent({
 }) {
   const bootstrapCategories = useMutation(api.categories.bootstrap);
   const bootstrapCurrencies = useMutation(api.currencies.bootstrap);
-  const { closeSubview } = useManageNav();
+  const { subview, closeSubview } = useManageNav();
   const { editingTx } = useHistoryEdit();
   const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchMove, onTouchEnd } =
     swipe;
@@ -59,7 +59,7 @@ function BudgetAppContent({
         className="tab-viewport"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        onTouchEnd={subview === null ? onTouchEnd : undefined}
       >
         <div className="tab-track">
           <TableScreen />
