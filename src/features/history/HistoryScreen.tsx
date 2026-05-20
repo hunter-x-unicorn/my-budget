@@ -54,16 +54,20 @@ export function HistoryScreen() {
                   onClick={() => setEditingId(tx._id)}
                 >
                   <span className={`tx-icon ${tx.type}`} aria-hidden>
-                    {tx.type === "income" ? "↑" : "↓"}
+                    {tx.type === "income" ? "↑" : tx.type === "transfer" ? "⇄" : "↓"}
                   </span>
                   <div className="tx-info">
                     <span className="tx-category">{tx.categoryName}</span>
+                    {tx.tagNames && tx.tagNames.length > 0 && (
+                      <span className="tx-note">{tx.tagNames.join(" · ")}</span>
+                    )}
                     {tx.note && <span className="tx-note">{tx.note}</span>}
                     <span className="tx-time">{formatListTime(tx.date)}</span>
                   </div>
                   <span className={`tx-amount ${tx.type}`}>
-                    {tx.type === "income" ? "+" : "−"}
+                    {tx.type === "income" ? "+" : tx.type === "transfer" ? "" : "−"}
                     {formatMoney(tx.amount)}
+                    {tx.currencySymbol ? ` ${tx.currencySymbol}` : ""}
                   </span>
                 </button>
                 <button
@@ -89,7 +93,7 @@ export function HistoryScreen() {
         </section>
       ))}
 
-      {editingTx?.categoryId && (
+      {editingTx?.categoryId && editingTx.type !== "transfer" && (
         <TransactionEditOverlay
           transaction={{
             _id: editingTx._id,
@@ -97,6 +101,7 @@ export function HistoryScreen() {
             amount: editingTx.amount,
             categoryId: editingTx.categoryId,
             categoryName: editingTx.categoryName,
+            currencyId: editingTx.currencyId,
             note: editingTx.note,
             date: editingTx.date,
           }}

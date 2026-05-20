@@ -14,6 +14,22 @@ const schema = defineSchema({
     isAnonymous: v.optional(v.boolean()),
   }).index("email", ["email"]),
 
+  currencies: defineTable({
+    userId: v.id("users"),
+    code: v.string(),
+    name: v.string(),
+    symbol: v.string(),
+    order: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_code", ["userId", "code"]),
+
+  tags: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    order: v.number(),
+  }).index("by_user", ["userId"]),
+
   categories: defineTable({
     userId: v.id("users"),
     name: v.string(),
@@ -25,9 +41,18 @@ const schema = defineSchema({
 
   transactions: defineTable({
     userId: v.id("users"),
-    type: v.union(v.literal("income"), v.literal("expense")),
+    type: v.union(
+      v.literal("income"),
+      v.literal("expense"),
+      v.literal("transfer"),
+    ),
     amount: v.number(),
-    categoryId: v.id("categories"),
+    currencyId: v.optional(v.id("currencies")),
+    tagIds: v.optional(v.array(v.id("tags"))),
+    /** Required for new rows; legacy rows may omit until migrations run. */
+    categoryId: v.optional(v.id("categories")),
+    /** @deprecated Legacy string category — removed by migrations. */
+    category: v.optional(v.string()),
     note: v.optional(v.string()),
     date: v.number(),
   })

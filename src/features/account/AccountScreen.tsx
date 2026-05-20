@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import type { TransactionType } from "../../shared/types/budget";
+type CategoryType = "income" | "expense";
 
 function CategorySection({
   title,
@@ -15,9 +15,9 @@ function CategorySection({
   onMove,
 }: {
   title: string;
-  type: TransactionType;
+  type: CategoryType;
   items: { _id: Id<"categories">; name: string; order: number }[];
-  onAdd: (name: string, type: TransactionType) => Promise<void>;
+  onAdd: (name: string, type: CategoryType) => Promise<void>;
   onRename: (id: Id<"categories">, name: string) => void;
   onRemove: (id: Id<"categories">) => void;
   onMove: (id: Id<"categories">, direction: "up" | "down") => void;
@@ -122,7 +122,7 @@ export function AccountScreen() {
   const expense = categories?.filter((c) => c.type === "expense") ?? [];
   const income = categories?.filter((c) => c.type === "income") ?? [];
 
-  const handleAdd = async (name: string, type: TransactionType) => {
+  const handleAdd = async (name: string, type: CategoryType) => {
     setActionError(null);
     await createCategory({ name, type });
   };

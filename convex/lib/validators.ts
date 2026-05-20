@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 
-export const transactionType = v.union(v.literal("income"), v.literal("expense"));
+export const transactionType = v.union(
+  v.literal("income"),
+  v.literal("expense"),
+  v.literal("transfer"),
+);
 
 export const categoryType = v.union(v.literal("income"), v.literal("expense"));
 
@@ -28,8 +32,12 @@ export const transactionRowValidator = v.object({
   userId: v.id("users"),
   type: transactionType,
   amount: v.number(),
-  categoryId: v.id("categories"),
+  categoryId: v.optional(v.id("categories")),
   categoryName: v.string(),
+  currencyId: v.optional(v.id("currencies")),
+  currencyCode: v.optional(v.string()),
+  currencySymbol: v.optional(v.string()),
+  tagNames: v.optional(v.array(v.string())),
   note: v.optional(v.string()),
   date: v.number(),
 });

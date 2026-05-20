@@ -31,7 +31,7 @@ export function buildTableForMonth(
       expense: 0,
     };
     if (row.type === "income") cell.income += row.amount;
-    else cell.expense += row.amount;
+    else if (row.type === "expense") cell.expense += row.amount;
     aggregated.set(mapKey, cell);
   }
 
@@ -43,7 +43,7 @@ export function buildSummary(rows: Doc<"transactions">[]) {
   let expense = 0;
   for (const row of rows) {
     if (row.type === "income") income += row.amount;
-    else expense += row.amount;
+    else if (row.type === "expense") expense += row.amount;
   }
   return { income, expense, balance: income - expense };
 }

@@ -41,17 +41,28 @@
 | Build падает на convex deploy     | `CONVEX_DEPLOY_KEY`, доступ к prod project               |
 | Типы API не сходятся              | `npx convex dev` локально, не править `api.d.ts` вручную |
 | Старые операции не в таблице      | См. миграции ниже                                        |
-| Schema push fails (legacy rows)   | Сначала `linkLegacyTransactions`, потом деплой           |
+| Schema push fails (legacy rows)   | `npx convex dev`, затем `migrateAllCategoryFields` (см. ниже) |
 
 ### Миграция legacy transactions
 
-Перед деплоем версии с обязательным `categoryId` (без поля `category`):
+Если `npx convex dev` падает с `missing categoryId` — в БД остались старые операции с полем `category`.
+Схема временно принимает оба формата; после миграции данные приводятся к `categoryId`.
+
+```bash
+npx convex dev
+# в другом терминале, пока dev работает:
+npx convex run migrations:migrateAllCategoryFields
+```
+
+Или по шагам:
 
 ```bash
 npx convex run migrations:linkLegacyTransactions
-# если skipped > 0 и записи без имени — удалить сироты:
+npx convex run migrations:stripLegacyCategoryFields
 npx convex run migrations:removeOrphanTransactions
 ```
+
+Если `skipped > 0` — нет категории с таким именем: откройте приложение (bootstrap категорий), затем повторите `linkLegacyTransactions`.
 
 Затем `npx convex deploy` / merge.
 

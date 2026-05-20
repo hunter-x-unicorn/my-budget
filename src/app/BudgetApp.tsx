@@ -13,15 +13,17 @@ import { useHashTabs } from "../shared/hooks/useHashTabs";
 import { TAB_COUNT } from "./navigation";
 
 export function BudgetApp() {
-  const bootstrap = useMutation(api.categories.bootstrap);
+  const bootstrapCategories = useMutation(api.categories.bootstrap);
+  const bootstrapCurrencies = useMutation(api.currencies.bootstrap);
   const { activeTab, viewportRef, scrollToTab, onTouchStart, onTouchMove, onTouchEnd } =
     useSwipeTabs(TAB_COUNT);
 
   useHashTabs(activeTab, scrollToTab);
 
   useEffect(() => {
-    void bootstrap();
-  }, [bootstrap]);
+    void bootstrapCategories();
+    void bootstrapCurrencies();
+  }, [bootstrapCategories, bootstrapCurrencies]);
 
   return (
     <MonthProvider>

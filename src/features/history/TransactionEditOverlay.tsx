@@ -1,4 +1,4 @@
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { api } from "../../../convex/_generated/api";
 import { TransactionForm } from "../../shared/ui/TransactionForm";
@@ -9,6 +9,7 @@ type EditableTransaction = {
   amount: number;
   categoryId: Id<"categories">;
   categoryName: string;
+  currencyId?: Id<"currencies">;
   note?: string;
   date: number;
 };
@@ -21,6 +22,8 @@ export function TransactionEditOverlay({
   onClose: () => void;
 }) {
   const update = useMutation(api.transactions.mutations.update);
+  const currencies = useQuery(api.currencies.list);
+  const currencyId = transaction.currencyId ?? currencies?.[0]?._id;
 
   return (
     <div
@@ -49,11 +52,13 @@ export function TransactionEditOverlay({
           submitLabel="Сохранить"
           onCancel={onClose}
           onSubmit={async (values) => {
+            if (!currencyId) return;
             await update({
               id: transaction._id,
               type: values.type,
               amount: values.amount,
               categoryId: values.categoryId,
+              currencyId,
               note: values.note,
               date: values.date,
             });

@@ -1,4 +1,4 @@
-export type TransactionType = "income" | "expense";
+export type TransactionType = "income" | "expense" | "transfer";
 
 export type MonthState = { year: number; month: number };
 

@@ -15,6 +15,7 @@ export function AnalyticsScreen() {
   const byCategory = useMemo(() => {
     const map = new Map<string, { name: string; expense: number; income: number }>();
     for (const tx of transactions ?? []) {
+      if (tx.type === "transfer" || !tx.categoryId) continue;
       const key = tx.categoryId;
       const row = map.get(key) ?? {
         name: tx.categoryName,
@@ -22,7 +23,7 @@ export function AnalyticsScreen() {
         income: 0,
       };
       if (tx.type === "income") row.income += tx.amount;
-      else row.expense += tx.amount;
+      else if (tx.type === "expense") row.expense += tx.amount;
       map.set(key, row);
     }
     return [...map.values()]
