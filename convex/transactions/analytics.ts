@@ -1,7 +1,8 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { getOptionalUserId } from "../lib/auth";
-import { dayKeyFromTimestamp, monthRange } from "../lib/dates";
+import { datesInMonth, dayKeyFromTimestamp, monthRange } from "../lib/dates";
+import { addMoney } from "../lib/money";
 import { monthArgs, summaryValidator } from "../lib/validators";
 import { buildSummary } from "./table";
 
@@ -17,23 +18,26 @@ export const bundle = query({
     expenseByCategory: v.array(sliceValidator),
     incomeByCategory: v.array(sliceValidator),
     expenseByTag: v.array(sliceValidator),
-    dailyExpense: v.array(v.object({ date: v.string(), amount: v.number() })),
-    dailyIncome: v.array(v.object({ date: v.string(), amount: v.number() })),
     dailyBalance: v.array(
       v.object({ date: v.string(), income: v.number(), expense: v.number() }),
     ),
   }),
   handler: async (ctx, { year, month }) => {
     const userId = await getOptionalUserId(ctx);
+    const monthDates = datesInMonth(year, month);
+    const emptyDaily = monthDates.map((date) => ({
+      date,
+      income: 0,
+      expense: 0,
+    }));
+
     if (userId === null) {
       return {
         summary: { income: 0, expense: 0, balance: 0 },
         expenseByCategory: [],
         incomeByCategory: [],
         expenseByTag: [],
-        dailyExpense: [],
-        dailyIncome: [],
-        dailyBalance: [],
+        dailyBalance: emptyDaily,
       };
     }
 
@@ -67,27 +71,24 @@ export const bundle = query({
       const dk = dayKeyFromTimestamp(row.date);
       if (row.type === "expense" && row.categoryId) {
         const name = catName.get(row.categoryId) ?? "—";
-        expenseCat.set(name, (expenseCat.get(name) ?? 0) + row.amount);
-        dailyExp.set(dk, (dailyExp.get(dk) ?? 0) + row.amount);
+        expenseCat.set(name, addMoney(expenseCat.get(name) ?? 0, row.amount));
+        dailyExp.set(dk, addMoney(dailyExp.get(dk) ?? 0, row.amount));
         for (const tagId of row.tagIds ?? []) {
           const tn = tagName.get(tagId) ?? "—";
-          expenseTag.set(tn, (expenseTag.get(tn) ?? 0) + row.amount);
+          expenseTag.set(tn, addMoney(expenseTag.get(tn) ?? 0, row.amount));
         }
       } else if (row.type === "income" && row.categoryId) {
         const name = catName.get(row.categoryId) ?? "—";
-        incomeCat.set(name, (incomeCat.get(name) ?? 0) + row.amount);
-        dailyInc.set(dk, (dailyInc.get(dk) ?? 0) + row.amount);
+        incomeCat.set(name, addMoney(incomeCat.get(name) ?? 0, row.amount));
+        dailyInc.set(dk, addMoney(dailyInc.get(dk) ?? 0, row.amount));
       }
     }
 
-    const allDays = new Set([...dailyExp.keys(), ...dailyInc.keys()]);
-    const dailyBalance = [...allDays]
-      .sort()
-      .map((date) => ({
-        date,
-        income: dailyInc.get(date) ?? 0,
-        expense: dailyExp.get(date) ?? 0,
-      }));
+    const dailyBalance = monthDates.map((date) => ({
+      date,
+      income: dailyInc.get(date) ?? 0,
+      expense: dailyExp.get(date) ?? 0,
+    }));
 
     const toSlices = (m: Map<string, number>) =>
       [...m.entries()]
@@ -99,12 +100,6 @@ export const bundle = query({
       expenseByCategory: toSlices(expenseCat),
       incomeByCategory: toSlices(incomeCat),
       expenseByTag: toSlices(expenseTag),
-      dailyExpense: [...dailyExp.entries()]
-        .map(([date, amount]) => ({ date, amount }))
-        .sort((a, b) => a.date.localeCompare(b.date)),
-      dailyIncome: [...dailyInc.entries()]
-        .map(([date, amount]) => ({ date, amount }))
-        .sort((a, b) => a.date.localeCompare(b.date)),
       dailyBalance,
     };
   },

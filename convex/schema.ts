@@ -57,6 +57,7 @@ const schema = defineSchema({
     date: v.number(),
   })
     .index("by_user_date", ["userId", "date"])
+    .index("by_user_currency", ["userId", "currencyId"])
     .index("by_category", ["categoryId"]),
 });
 

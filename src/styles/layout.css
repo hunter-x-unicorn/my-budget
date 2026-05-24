@@ -44,7 +44,7 @@
   overscroll-behavior-y: contain;
   padding: max(0.75rem, env(safe-area-inset-top))
     max(0.75rem, env(safe-area-inset-right))
-    calc(var(--nav-height) + var(--safe-bottom) + 1.5rem)
+    var(--tab-panel-bottom)
     max(0.75rem, env(safe-area-inset-left));
   -webkit-overflow-scrolling: touch;
 }
@@ -88,8 +88,8 @@
   height: 2.75rem;
   border: none;
   border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  color: #e5e7eb;
+  background: var(--color-btn-icon-bg);
+  color: var(--color-btn-icon-text);
   font-size: 1.25rem;
   cursor: pointer;
   display: grid;

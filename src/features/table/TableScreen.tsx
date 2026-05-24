@@ -12,7 +12,12 @@ export function TableScreen() {
   return (
     <div className="tab-panel table-tab">
       <MonthNavigator titleAs="h2" />
-      <ExcelGrid year={month.year} month={month.month} dates={dates} />
+      <ExcelGrid
+        year={month.year}
+        month={month.month}
+        dates={dates}
+        cells={bundle?.table.cells ?? []}
+      />
     </div>
   );
 }

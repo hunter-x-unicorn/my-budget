@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { useHistoryEdit, type HistoryEditTx } from "../../shared/context/HistoryEditContext";
 import { useMonth } from "../../shared/hooks/useMonth";
-import { formatDayHeader, formatListTime, formatMoney } from "../../shared/lib/budget";
+import {
+  formatDayHeader,
+  formatListTime,
+  formatMoney,
+  formatMonthLabel,
+} from "../../shared/lib/budget";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 import { MonthNavigator } from "../../shared/ui/MonthNavigator";
 import {
@@ -12,23 +17,7 @@ import {
 } from "../../shared/ui/TransactionForm";
 import { TransactionFormSheet } from "../../shared/ui/TransactionFormSheet";
 
-const MONTH_NAMES = [
-  "Январь",
-  "Февраль",
-  "Март",
-  "Апрель",
-  "Май",
-  "Июнь",
-  "Июль",
-  "Август",
-  "Сентябрь",
-  "Октябрь",
-  "Ноябрь",
-  "Декабрь",
-];
-
 type TxRow = HistoryEditTx & {
-  currencySymbol?: string;
   tagNames?: string[];
 };
 
@@ -57,7 +46,7 @@ export function HistoryScreen({ isActive }: { isActive: boolean }) {
       if (!monthMap.has(mKey)) {
         monthMap.set(mKey, {
           key: mKey,
-          label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`,
+          label: formatMonthLabel(d.getFullYear(), d.getMonth()),
           days: [],
         });
       }
@@ -138,8 +127,7 @@ export function HistoryScreen({ isActive }: { isActive: boolean }) {
                       </div>
                       <span className={`tx-amount ${tx.type}`}>
                         {tx.type === "income" ? "+" : tx.type === "transfer" ? "" : "−"}
-                        {formatMoney(tx.amount)}
-                        {tx.currencySymbol ? ` ${tx.currencySymbol}` : ""}
+                        {formatMoney(tx.amount, false, tx.currencyCode)}
                       </span>
                     </button>
                     <button
@@ -198,7 +186,7 @@ export function HistoryScreen({ isActive }: { isActive: boolean }) {
         title="Удалить операцию?"
         message={
           deleteTarget
-            ? `«${deleteTarget.categoryName}» на ${formatMoney(deleteTarget.amount)} будет удалена без возможности восстановления.`
+            ? `«${deleteTarget.categoryName}» на ${formatMoney(deleteTarget.amount, false, deleteTarget.currencyCode)} будет удалена без возможности восстановления.`
             : ""
         }
         confirmLabel="Удалить"

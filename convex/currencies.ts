@@ -1,12 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import {
-  internalMutation,
-  mutation,
-  type MutationCtx,
-  query,
-} from "./_generated/server";
+import { mutation, type MutationCtx, query } from "./_generated/server";
 import { getOptionalUserId, requireUserId } from "./lib/auth";
+import { assertValidReorder, nextOrder } from "./lib/crud";
 
 export const currencyDocValidator = v.object({
   _id: v.id("currencies"),
@@ -45,24 +41,6 @@ export const bootstrap = mutation({
     if (existing === null) {
       await insertDefaultCurrency(ctx, userId);
     }
-    return null;
-  },
-});
-
-export const seedDefaultsIfEmpty = internalMutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const userId = await getOptionalUserId(ctx);
-    if (userId === null) return null;
-
-    const existing = await ctx.db
-      .query("currencies")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    if (existing !== null) return null;
-
-    await insertDefaultCurrency(ctx, userId);
     return null;
   },
 });
@@ -119,14 +97,13 @@ export const create = mutation({
       .query("currencies")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    const maxOrder = siblings.reduce((m, c) => Math.max(m, c.order), -1);
 
     return await ctx.db.insert("currencies", {
       userId,
       code: normalizedCode,
       name: trimmedName,
       symbol: trimmedSymbol,
-      order: maxOrder + 1,
+      order: nextOrder(siblings),
     });
   },
 });
@@ -136,11 +113,13 @@ async function currencyInUse(
   userId: Id<"users">,
   currencyId: Id<"currencies">,
 ) {
-  const rows = await ctx.db
+  const row = await ctx.db
     .query("transactions")
-    .withIndex("by_user_date", (q) => q.eq("userId", userId))
-    .collect();
-  return rows.some((row) => row.currencyId === currencyId);
+    .withIndex("by_user_currency", (q) =>
+      q.eq("userId", userId).eq("currencyId", currencyId),
+    )
+    .first();
+  return row !== null;
 }
 
 export const remove = mutation({
@@ -188,51 +167,16 @@ export const reorder = mutation({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    if (orderedIds.length !== siblings.length) {
-      throw new ConvexError("Неверный список валют");
-    }
-
-    const idSet = new Set(siblings.map((c) => c._id));
-    for (const id of orderedIds) {
-      if (!idSet.has(id)) {
-        throw new ConvexError("Валюта не найдена");
-      }
-    }
+    assertValidReorder(
+      orderedIds as string[],
+      siblings as Array<{ _id: string }>,
+      "Неверный список валют",
+      "Валюта не найдена",
+    );
 
     for (let i = 0; i < orderedIds.length; i++) {
       await ctx.db.patch(orderedIds[i]!, { order: i });
     }
-    return null;
-  },
-});
-
-export const move = mutation({
-  args: {
-    id: v.id("currencies"),
-    direction: v.union(v.literal("up"), v.literal("down")),
-  },
-  returns: v.null(),
-  handler: async (ctx, { id, direction }) => {
-    const userId = await requireUserId(ctx);
-    const currency = await ctx.db.get(id);
-    if (currency === null || currency.userId !== userId) {
-      throw new ConvexError("Валюта не найдена");
-    }
-
-    const siblings = (
-      await ctx.db
-        .query("currencies")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect()
-    ).sort((a, b) => a.order - b.order);
-
-    const index = siblings.findIndex((c) => c._id === id);
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= siblings.length) return null;
-
-    const other = siblings[swapIndex]!;
-    await ctx.db.patch(id, { order: other.order });
-    await ctx.db.patch(other._id, { order: currency.order });
     return null;
   },
 });

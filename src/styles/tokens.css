@@ -1,15 +1,90 @@
-:root {
+/* Dark theme (default) */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
   --color-bg: #0a0c10;
   --color-bg-elevated: #12151c;
   --color-bg-panel: #0e1016;
+  --color-text-primary: #f3f4f6;
+  --color-surface-overlay: rgba(0, 0, 0, 0.65);
+  --color-surface-sheet: #141820;
+  --color-surface-sheet-alt: #161b24;
+  --color-surface-menu: #1a1f28;
+  --color-surface-card: rgba(255, 255, 255, 0.03);
+  --color-surface-card-border: rgba(255, 255, 255, 0.06);
+  --color-surface-muted: rgba(255, 255, 255, 0.04);
+  --color-surface-input: #0a0c10;
+  --color-surface-chip: rgba(255, 255, 255, 0.04);
+  --color-surface-chip-border: rgba(255, 255, 255, 0.12);
+  --color-surface-chip-selected: rgba(255, 255, 255, 0.12);
+  --color-nav-bg: rgba(10, 12, 16, 0.92);
+  --color-nav-border: rgba(255, 255, 255, 0.08);
+  --color-btn-icon-bg: rgba(255, 255, 255, 0.06);
+  --color-btn-icon-text: #e5e7eb;
+  --color-field-label: #9aa3b5;
   --color-income: #4ade80;
   --color-income-muted: #86efac;
   --color-expense: #f87171;
   --color-expense-muted: #fca5a5;
   --color-text-muted: #6b7280;
   --color-text-secondary: #9ca3af;
+  --color-primary-start: #22c55e;
+  --color-primary-end: #16a34a;
+  --color-danger-start: #ef4444;
+  --color-danger-end: #dc2626;
   --color-border: rgba(255, 255, 255, 0.06);
+  --color-accent-indigo-bg: rgba(99, 102, 241, 0.25);
+  --color-accent-indigo-border: rgba(99, 102, 241, 0.5);
+  --color-accent-indigo-text: #e8eaef;
+  --color-donut-hole: var(--color-bg-elevated);
+  --color-chart-track: rgba(255, 255, 255, 0.06);
+  --color-mini-cell-bg: rgba(0, 0, 0, 0.15);
   --nav-height: 5.25rem;
   --safe-bottom: env(safe-area-inset-bottom);
   --app-max-width: 32rem;
+  --tab-panel-bottom: calc(var(--nav-height) + var(--safe-bottom) + 1.5rem);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #f3f4f6;
+  --color-bg-elevated: #ffffff;
+  --color-bg-panel: #ffffff;
+  --color-text-primary: #111827;
+  --color-surface-overlay: rgba(15, 23, 42, 0.45);
+  --color-surface-sheet: #ffffff;
+  --color-surface-sheet-alt: #f9fafb;
+  --color-surface-menu: #ffffff;
+  --color-surface-card: #ffffff;
+  --color-surface-card-border: rgba(15, 23, 42, 0.1);
+  --color-surface-muted: #f9fafb;
+  --color-surface-input: #ffffff;
+  --color-surface-chip: #ffffff;
+  --color-surface-chip-border: rgba(15, 23, 42, 0.12);
+  --color-surface-chip-selected: #ecfdf5;
+  --color-nav-bg: rgba(255, 255, 255, 0.94);
+  --color-nav-border: rgba(15, 23, 42, 0.08);
+  --color-btn-icon-bg: rgba(15, 23, 42, 0.06);
+  --color-btn-icon-text: #374151;
+  --color-field-label: #6b7280;
+  --color-income: #16a34a;
+  --color-income-muted: #15803d;
+  --color-expense: #dc2626;
+  --color-expense-muted: #b91c1c;
+  --color-text-muted: #6b7280;
+  --color-text-secondary: #4b5563;
+  --color-primary-start: #22c55e;
+  --color-primary-end: #16a34a;
+  --color-danger-start: #ef4444;
+  --color-danger-end: #dc2626;
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-accent-indigo-bg: rgba(99, 102, 241, 0.12);
+  --color-accent-indigo-border: rgba(99, 102, 241, 0.35);
+  --color-accent-indigo-text: #3730a3;
+  --color-donut-hole: #ffffff;
+  --color-chart-track: rgba(15, 23, 42, 0.08);
+  --color-mini-cell-bg: rgba(15, 23, 42, 0.04);
 }

@@ -5,6 +5,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 import { PromptSheet } from "../../shared/ui/PromptSheet";
 import { DraggableList } from "./DraggableList";
+import { useMutationRunner } from "./useMutationRunner";
 
 type CategoryManageViewProps = {
   onBack: () => void;
@@ -17,7 +18,7 @@ export function CategoryManageView({ onBack }: CategoryManageViewProps) {
   const remove = useMutation(api.categories.remove);
   const reorder = useMutation(api.categories.reorder);
 
-  const [error, setError] = useState<string | null>(null);
+  const { error, run } = useMutationRunner();
   const [addType, setAddType] = useState<"expense" | "income" | null>(null);
   const [deleteId, setDeleteId] = useState<Id<"categories"> | null>(null);
 
@@ -29,15 +30,6 @@ export function CategoryManageView({ onBack }: CategoryManageViewProps) {
     () => categories?.filter((c) => c.type === "income") ?? [],
     [categories],
   );
-
-  const run = async (fn: () => Promise<void>) => {
-    setError(null);
-    try {
-      await fn();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Ошибка");
-    }
-  };
 
   const deleteLabel =
     categories?.find((c) => c._id === deleteId)?.name ?? "";
@@ -77,11 +69,11 @@ export function CategoryManageView({ onBack }: CategoryManageViewProps) {
               reorder({
                 type: "expense",
                 orderedIds: ids as Id<"categories">[],
-              }).then(() => {}),
+              }),
             )
           }
           onRename={(id, name) =>
-            void run(() => rename({ id: id as Id<"categories">, name }).then(() => {}))
+            void run(() => rename({ id: id as Id<"categories">, name }))
           }
           onDelete={(id) => setDeleteId(id as Id<"categories">)}
         />
@@ -106,11 +98,11 @@ export function CategoryManageView({ onBack }: CategoryManageViewProps) {
               reorder({
                 type: "income",
                 orderedIds: ids as Id<"categories">[],
-              }).then(() => {}),
+              }),
             )
           }
           onRename={(id, name) =>
-            void run(() => rename({ id: id as Id<"categories">, name }).then(() => {}))
+            void run(() => rename({ id: id as Id<"categories">, name }))
           }
           onDelete={(id) => setDeleteId(id as Id<"categories">)}
         />
@@ -123,7 +115,9 @@ export function CategoryManageView({ onBack }: CategoryManageViewProps) {
         onCancel={() => setAddType(null)}
         onSubmit={(name) =>
           void run(() =>
-            create({ name, type: addType! }).then(() => setAddType(null)),
+            create({ name, type: addType! }).then(() => {
+              setAddType(null);
+            }),
           )
         }
       />
@@ -139,7 +133,11 @@ export function CategoryManageView({ onBack }: CategoryManageViewProps) {
         onCancel={() => setDeleteId(null)}
         onConfirm={() => {
           if (!deleteId) return;
-          void run(() => remove({ id: deleteId }).then(() => setDeleteId(null)));
+          void run(() =>
+            remove({ id: deleteId }).then(() => {
+              setDeleteId(null);
+            }),
+          );
         }}
       />
     </div>

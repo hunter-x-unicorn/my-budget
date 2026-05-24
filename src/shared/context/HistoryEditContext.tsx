@@ -15,6 +15,7 @@ export type HistoryEditTx = {
   categoryId?: Id<"categories">;
   categoryName: string;
   currencyId?: Id<"currencies">;
+  currencyCode?: string;
   tagIds?: Id<"tags">[];
   note?: string;
   date: number;

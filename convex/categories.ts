@@ -1,12 +1,13 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import {
-  internalMutation,
-  mutation,
-  type MutationCtx,
-  query,
-} from "./_generated/server";
+import { mutation, type MutationCtx, query } from "./_generated/server";
 import { categoryHasTransactions } from "./lib/categories";
+import {
+  assertValidReorder,
+  hasCaseInsensitiveDuplicate,
+  nextOrder,
+  normalizeEntityName,
+} from "./lib/crud";
 import { getOptionalUserId, requireUserId } from "./lib/auth";
 import { categoryDocValidator, categoryType } from "./lib/validators";
 
@@ -69,24 +70,6 @@ export const bootstrap = mutation({
   },
 });
 
-export const seedDefaultsIfEmpty = internalMutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const userId = await getOptionalUserId(ctx);
-    if (userId === null) return null;
-
-    const existing = await ctx.db
-      .query("categories")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    if (existing !== null) return null;
-
-    await insertDefaultCategories(ctx, userId);
-    return null;
-  },
-});
-
 export const list = query({
   args: {},
   returns: v.array(categoryDocValidator),
@@ -111,33 +94,27 @@ export const create = mutation({
   returns: v.id("categories"),
   handler: async (ctx, { name, type }) => {
     const userId = await requireUserId(ctx);
-    const trimmed = name.trim();
-    if (!trimmed) {
-      throw new ConvexError("Введите название категории");
-    }
-    if (trimmed.length > 40) {
-      throw new ConvexError("Слишком длинное название");
-    }
+    const trimmed = normalizeEntityName(
+      name,
+      "Введите название категории",
+      "Слишком длинное название",
+    );
 
     const siblings = await ctx.db
       .query("categories")
       .withIndex("by_user_type", (q) => q.eq("userId", userId).eq("type", type))
       .collect();
 
-    const duplicate = siblings.some(
-      (c) => c.name.toLowerCase() === trimmed.toLowerCase(),
-    );
+    const duplicate = hasCaseInsensitiveDuplicate(siblings, (c) => c.name, trimmed);
     if (duplicate) {
       throw new ConvexError("Такая категория уже есть");
     }
-
-    const maxOrder = siblings.reduce((m, c) => Math.max(m, c.order), -1);
 
     return await ctx.db.insert("categories", {
       userId,
       name: trimmed,
       type,
-      order: maxOrder + 1,
+      order: nextOrder(siblings),
     });
   },
 });
@@ -155,13 +132,11 @@ export const rename = mutation({
       throw new ConvexError("Категория не найдена");
     }
 
-    const trimmed = name.trim();
-    if (!trimmed) {
-      throw new ConvexError("Введите название категории");
-    }
-    if (trimmed.length > 40) {
-      throw new ConvexError("Слишком длинное название");
-    }
+    const trimmed = normalizeEntityName(
+      name,
+      "Введите название категории",
+      "Слишком длинное название",
+    );
 
     const siblings = await ctx.db
       .query("categories")
@@ -170,8 +145,11 @@ export const rename = mutation({
       )
       .collect();
 
-    const duplicate = siblings.some(
-      (c) => c._id !== id && c.name.toLowerCase() === trimmed.toLowerCase(),
+    const duplicate = hasCaseInsensitiveDuplicate(
+      siblings,
+      (c) => c.name,
+      trimmed,
+      { exclude: (c) => c._id === id },
     );
     if (duplicate) {
       throw new ConvexError("Такая категория уже есть");
@@ -228,53 +206,16 @@ export const reorder = mutation({
       .withIndex("by_user_type", (q) => q.eq("userId", userId).eq("type", type))
       .collect();
 
-    if (orderedIds.length !== siblings.length) {
-      throw new ConvexError("Неверный список категорий");
-    }
-
-    const idSet = new Set(siblings.map((c) => c._id));
-    for (const id of orderedIds) {
-      if (!idSet.has(id)) {
-        throw new ConvexError("Категория не найдена");
-      }
-    }
+    assertValidReorder(
+      orderedIds as string[],
+      siblings as Array<{ _id: string }>,
+      "Неверный список категорий",
+      "Категория не найдена",
+    );
 
     for (let i = 0; i < orderedIds.length; i++) {
       await ctx.db.patch(orderedIds[i]!, { order: i });
     }
-    return null;
-  },
-});
-
-export const move = mutation({
-  args: {
-    id: v.id("categories"),
-    direction: v.union(v.literal("up"), v.literal("down")),
-  },
-  returns: v.null(),
-  handler: async (ctx, { id, direction }) => {
-    const userId = await requireUserId(ctx);
-    const category = await ctx.db.get(id);
-    if (category === null || category.userId !== userId) {
-      throw new ConvexError("Категория не найдена");
-    }
-
-    const siblings = (
-      await ctx.db
-        .query("categories")
-        .withIndex("by_user_type", (q) =>
-          q.eq("userId", userId).eq("type", category.type),
-        )
-        .collect()
-    ).sort((a, b) => a.order - b.order);
-
-    const index = siblings.findIndex((c) => c._id === id);
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= siblings.length) return null;
-
-    const other = siblings[swapIndex]!;
-    await ctx.db.patch(id, { order: other.order });
-    await ctx.db.patch(other._id, { order: category.order });
     return null;
   },
 });

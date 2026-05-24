@@ -3,6 +3,7 @@ import type { Id } from "../_generated/dataModel";
 import { mutation, type MutationCtx } from "../_generated/server";
 import { requireUserId } from "../lib/auth";
 import { dayRangeFromKey, timestampFromDayKey } from "../lib/dates";
+import { roundMoney } from "../lib/money";
 import { transactionType } from "../lib/validators";
 
 type TransactionInput = {
@@ -78,7 +79,7 @@ export const create = mutation({
     return await ctx.db.insert("transactions", {
       userId,
       type: args.type,
-      amount: Math.round(args.amount * 100) / 100,
+      amount: roundMoney(args.amount),
       categoryId: args.categoryId,
       currencyId: args.currencyId,
       tagIds: args.tagIds?.length ? args.tagIds : undefined,
@@ -111,7 +112,7 @@ export const update = mutation({
 
     await ctx.db.patch(args.id, {
       type: args.type,
-      amount: Math.round(args.amount * 100) / 100,
+      amount: roundMoney(args.amount),
       categoryId: args.categoryId,
       currencyId: args.currencyId,
       tagIds: args.tagIds?.length ? args.tagIds : undefined,
@@ -151,7 +152,7 @@ export const setCellAmount = mutation({
       }
     }
 
-    const rounded = Math.round(amount * 100) / 100;
+    const rounded = roundMoney(amount);
     if (rounded <= 0) return null;
 
     const defaultCurrency = await ctx.db

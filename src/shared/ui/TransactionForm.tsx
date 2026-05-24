@@ -9,6 +9,7 @@ import {
   toDateInputValue,
   type TransactionType,
 } from "../lib/budget";
+import { parseAmountInput } from "../lib/money";
 import { ChipButton } from "./ChipButton";
 import { PromptSheet } from "./PromptSheet";
 import { SectionHeader } from "./SectionHeader";
@@ -197,8 +198,8 @@ export function TransactionForm({
         onSubmit={(e) => {
           e.preventDefault();
           setError(null);
-          const value = parseFloat(amount.replace(",", "."));
-          if (Number.isNaN(value) || value <= 0) {
+          const value = parseAmountInput(amount);
+          if (value === null) {
             setError("Введите сумму");
             return;
           }
@@ -258,13 +259,12 @@ export function TransactionForm({
         <label className="field amount-field">
           <span>Сумма{selectedCurrency ? `, ${selectedCurrency.symbol}` : ""}</span>
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
-            placeholder="0"
+            placeholder="0,00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            min="1"
-            step="1"
+            pattern="^\\d+([.,]\\d{1,2})?$"
             required
           />
         </label>

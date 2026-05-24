@@ -22,8 +22,3 @@ export function fromDateInputValue(value: string) {
   const [y, m, d] = value.split("-").map(Number);
   return new Date(y, m - 1, d, 12, 0, 0).getTime();
 }
-
-/** 0-based month — mirrors convex/lib/dates.ts toDayKey */
-export function dateKey(year: number, month: number, day: number) {
-  return `${year}-${month}-${day}`;
-}

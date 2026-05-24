@@ -5,7 +5,7 @@
   min-height: 48px;
   cursor: pointer;
   font-weight: 600;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
   color: #fff;
 }
 
@@ -51,14 +51,14 @@
 
 /* --- Chip buttons (categories, tags, currency) --- */
 .chip-btn {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-surface-chip-border);
   border-radius: 999px;
   padding: 0.55rem 1rem;
   min-height: 40px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-surface-chip);
   color: var(--color-text-secondary);
   transition:
     background 0.15s,
@@ -73,9 +73,9 @@
 }
 
 .chip-btn--selected {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.12);
-  color: #e8eaef;
+  border-color: var(--color-surface-chip-border);
+  background: var(--color-surface-chip-selected);
+  color: var(--color-text-primary);
 }
 
 .chip-btn--expense.chip-btn--selected {
@@ -138,7 +138,7 @@
 
 .form-section-label {
   font-size: 0.8rem;
-  color: #9aa3b5;
+  color: var(--color-field-label);
 }
 
 .form-section-head {
@@ -223,7 +223,7 @@
   padding: 0.35rem;
   border-radius: 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #1a1f28;
+  background: var(--color-surface-menu);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -250,12 +250,12 @@
   padding: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
-  background: #141820;
-  color: inherit;
+  background: var(--color-surface-sheet);
+  color: var(--color-text-primary);
 }
 
 .app-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--color-surface-overlay);
 }
 
 .app-dialog-title {
@@ -291,36 +291,8 @@
   cursor: wait;
 }
 
-/* Legacy edit form toggle */
-.type-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
-  padding: 0.25rem;
-  border-radius: 0.75rem;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.type-toggle button {
-  border: none;
-  border-radius: 0.55rem;
-  padding: 0.7rem;
-  min-height: 44px;
-  font-weight: 600;
-  cursor: pointer;
-  background: transparent;
-  color: var(--color-text-secondary);
-}
-
-.type-toggle button.active.expense {
-  background: rgba(239, 68, 68, 0.2);
-  color: var(--color-expense-muted);
-}
-
-.type-toggle button.active.income {
-  background: rgba(34, 197, 94, 0.2);
-  color: var(--color-income-muted);
+.btn-secondary--full {
+  width: 100%;
 }
 
 .amount-field input {
@@ -336,15 +308,15 @@
 
 .field span {
   font-size: 0.8rem;
-  color: #9aa3b5;
+  color: var(--color-field-label);
 }
 
 .field input,
 .field select {
   padding: 0.85rem 1rem;
   border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: var(--color-bg);
+  border: 1px solid var(--color-surface-card-border);
+  background: var(--color-surface-input);
   color: inherit;
   min-height: 48px;
 }
@@ -378,7 +350,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--color-surface-overlay);
   padding: 0 max(0, calc((100vw - var(--app-max-width)) / 2));
 }
 
@@ -389,7 +361,7 @@
   overflow-y: auto;
   padding: 1rem 1.25rem max(1.5rem, var(--safe-bottom));
   border-radius: 1.25rem 1.25rem 0 0;
-  background: #141820;
+  background: var(--color-surface-sheet);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -430,7 +402,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--color-surface-overlay);
   padding: 0 max(0, calc((100vw - var(--app-max-width)) / 2));
 }
 
@@ -439,7 +411,7 @@
   max-width: var(--app-max-width);
   padding: 1.25rem 1.25rem max(1.5rem, var(--safe-bottom));
   border-radius: 1.25rem 1.25rem 0 0;
-  background: #161b24;
+  background: var(--color-surface-sheet-alt);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   animation: confirm-slide 0.22s ease-out;
 }
@@ -484,7 +456,7 @@
   min-height: 48px;
   cursor: pointer;
   font-weight: 600;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, var(--color-danger-start), var(--color-danger-end));
   color: #fff;
 }
 

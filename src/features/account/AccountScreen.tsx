@@ -1,11 +1,12 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import { useState, type ComponentType } from "react";
+import type { ComponentType } from "react";
 import { api } from "../../../convex/_generated/api";
 import {
   useManageNav,
   type AccountSubview,
 } from "../../shared/context/ManageNavContext";
+import { useTheme } from "../../shared/context/ThemeContext";
 import { CategoryManageView } from "./CategoryManageView";
 import { CurrencyManageView } from "./CurrencyManageView";
 import { TagManageView } from "./TagManageView";
@@ -50,7 +51,7 @@ export function AccountScreen() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.current);
   const { subview, openSubview, closeSubview } = useManageNav();
-  const [lightTheme, setLightTheme] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   if (subview !== null) {
     const View = SUBVIEW_VIEWS[subview];
@@ -66,20 +67,9 @@ export function AccountScreen() {
       <p className="account-email-top">{user?.email ?? "…"}</p>
 
       <div className="account-menu">
-        <button
-          type="button"
-          className="account-menu-row"
-          onClick={() => setLightTheme((v) => !v)}
-        >
-          {lightTheme ? <IconSun /> : <IconMoon />}
-          <span>{lightTheme ? "Светлая тема" : "Тёмная тема"}</span>
-        </button>
-
-        <button type="button" className="account-menu-row account-menu-row--muted">
-          <span className="account-row-icon-placeholder" aria-hidden>
-            🔒
-          </span>
-          <span>Сменить пароль</span>
+        <button type="button" className="account-menu-row" onClick={toggleTheme}>
+          {theme === "light" ? <IconSun /> : <IconMoon />}
+          <span>{theme === "light" ? "Светлая тема" : "Тёмная тема"}</span>
         </button>
 
         <button

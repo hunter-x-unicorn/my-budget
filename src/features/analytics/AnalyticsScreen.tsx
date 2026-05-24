@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { useMonth } from "../../shared/hooks/useMonth";
 import { formatMoney } from "../../shared/lib/format";
+import { addMoney } from "../../shared/lib/money";
 import { MonthNavigator } from "../../shared/ui/MonthNavigator";
 import { SummaryStrip } from "../../shared/ui/SummaryStrip";
 import { BarChart } from "./charts/BarChart";
@@ -36,13 +37,20 @@ export function AnalyticsScreen() {
   const cumulativeBalance = useMemo(() => {
     let run = 0;
     return (data?.dailyBalance ?? []).map((d) => {
-      run += d.income - d.expense;
+      run = addMoney(run, d.income);
+      run = addMoney(run, -d.expense);
       return run;
     });
   }, [data?.dailyBalance]);
 
   const topExpense = data?.expenseByCategory[0];
   const topTag = data?.expenseByTag[0];
+
+  const daysWithActivity = useMemo(
+    () =>
+      (data?.dailyBalance ?? []).filter((d) => d.income > 0 || d.expense > 0).length,
+    [data?.dailyBalance],
+  );
 
   return (
     <div className="tab-panel analytics-tab">
@@ -77,7 +85,7 @@ export function AnalyticsScreen() {
 
       <section className="analytics-card analytics-card--spark">
         <h3>Накопленный баланс за месяц</h3>
-        <Sparkline values={cumulativeBalance} stroke="#22c55e" />
+        <Sparkline values={cumulativeBalance} stroke="var(--color-income)" />
       </section>
 
       <div className="analytics-mode-picker" role="tablist" aria-label="Тип графика">
@@ -155,7 +163,7 @@ export function AnalyticsScreen() {
           </div>
           <div className="analytics-mini-cell">
             <span>Дней с операциями</span>
-            <strong>{data?.dailyBalance.length ?? 0}</strong>
+            <strong>{daysWithActivity}</strong>
           </div>
         </div>
       </section>

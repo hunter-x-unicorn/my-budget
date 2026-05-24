@@ -4,7 +4,7 @@ type ChipButtonProps = {
   children: ReactNode;
   selected?: boolean;
   size?: "md" | "sm";
-  variant?: "default" | "expense" | "income" | "transfer" | "accent";
+  variant?: "default" | "expense" | "income" | "transfer";
   className?: string;
   disabled?: boolean;
   onClick?: () => void;

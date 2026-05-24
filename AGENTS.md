@@ -31,7 +31,7 @@
 ## Именование
 
 - Экраны: `TableScreen`, не `TableTab` (legacy имена могут остаться до полного rename)
-- Convex: `list`, `create`, `remove`, `move`; seed — `seedDefaultsIfEmpty` (internal)
+- Convex: `list`, `create`, `remove`, `reorder`; seed — `bootstrap` из `BudgetApp`
 - Не возвращать из query `Record` с динамическими ключами — только массивы
 
 ## Документация

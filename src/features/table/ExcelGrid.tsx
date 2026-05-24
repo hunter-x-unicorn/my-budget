@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { formatTableDay } from "../../shared/lib/budget";
+import { parseAmountInput } from "../../shared/lib/money";
 import {
   cellsToTsv,
   isInSelection,
@@ -18,15 +19,22 @@ type RowDef = {
   type: "income" | "expense";
 };
 
+type TableCell = {
+  categoryId: Id<"categories">;
+  date: string;
+  income: number;
+  expense: number;
+};
+
 type ExcelGridProps = {
   year: number;
   month: number;
   dates: string[];
+  cells: TableCell[];
 };
 
-export function ExcelGrid({ year, month, dates }: ExcelGridProps) {
+export function ExcelGrid({ year, month, dates, cells }: ExcelGridProps) {
   const categories = useQuery(api.categories.list);
-  const bundle = useQuery(api.transactions.queries.monthBundle, { year, month });
   const setCellAmount = useMutation(api.transactions.mutations.setCellAmount);
 
   const rows: RowDef[] = useMemo(() => {
@@ -40,7 +48,7 @@ export function ExcelGrid({ year, month, dates }: ExcelGridProps) {
 
   const cellMap = useMemo(() => {
     const map = new Map<string, number>();
-    for (const cell of bundle?.table.cells ?? []) {
+    for (const cell of cells) {
       const amount =
         rows.find((r) => r.id === cell.categoryId)?.type === "income"
           ? cell.income
@@ -50,7 +58,7 @@ export function ExcelGrid({ year, month, dates }: ExcelGridProps) {
       }
     }
     return map;
-  }, [bundle?.table.cells, rows]);
+  }, [cells, rows]);
 
   const displayValues = useMemo(() => {
     return rows.map((row) =>
@@ -73,8 +81,8 @@ export function ExcelGrid({ year, month, dates }: ExcelGridProps) {
       const cat = rows[row];
       const dateKey = dates[col];
       if (!cat || !dateKey) return;
-      const value = parseFloat(raw.replace(",", "."));
-      const amount = Number.isNaN(value) ? 0 : value;
+      const value = parseAmountInput(raw);
+      const amount = value ?? 0;
       await setCellAmount({ categoryId: cat.id, dateKey, amount });
     },
     [rows, dates, setCellAmount],

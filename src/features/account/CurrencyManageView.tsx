@@ -6,6 +6,7 @@ import { CURRENCY_PRESETS } from "../../shared/lib/currencies";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 import { ChipButton } from "../../shared/ui/ChipButton";
 import { DraggableList } from "./DraggableList";
+import { useMutationRunner } from "./useMutationRunner";
 
 type CurrencyManageViewProps = {
   onBack: () => void;
@@ -17,21 +18,12 @@ export function CurrencyManageView({ onBack }: CurrencyManageViewProps) {
   const remove = useMutation(api.currencies.remove);
   const reorder = useMutation(api.currencies.reorder);
 
-  const [error, setError] = useState<string | null>(null);
+  const { error, run } = useMutationRunner();
   const [deleteId, setDeleteId] = useState<Id<"currencies"> | null>(null);
 
   const availablePresets = CURRENCY_PRESETS.filter(
     (p) => !currencies?.some((c) => c.code === p.code),
   );
-
-  const run = async (fn: () => Promise<void>) => {
-    setError(null);
-    try {
-      await fn();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Ошибка");
-    }
-  };
 
   const deleteLabel = currencies?.find((c) => c._id === deleteId);
 
@@ -60,9 +52,7 @@ export function CurrencyManageView({ onBack }: CurrencyManageViewProps) {
           })) ?? []
         }
         onReorder={(ids) =>
-          void run(() =>
-            reorder({ orderedIds: ids as Id<"currencies">[] }).then(() => {}),
-          )
+          void run(() => reorder({ orderedIds: ids as Id<"currencies">[] }))
         }
         onDelete={(id) => setDeleteId(id as Id<"currencies">)}
       />
@@ -81,7 +71,7 @@ export function CurrencyManageView({ onBack }: CurrencyManageViewProps) {
                       code: p.code,
                       name: p.name,
                       symbol: p.symbol,
-                    }).then(() => {}),
+                    }),
                   )
                 }
               >
@@ -103,7 +93,11 @@ export function CurrencyManageView({ onBack }: CurrencyManageViewProps) {
         onCancel={() => setDeleteId(null)}
         onConfirm={() => {
           if (!deleteId) return;
-          void run(() => remove({ id: deleteId }).then(() => setDeleteId(null)));
+          void run(() =>
+            remove({ id: deleteId }).then(() => {
+              setDeleteId(null);
+            }),
+          );
         }}
       />
     </div>

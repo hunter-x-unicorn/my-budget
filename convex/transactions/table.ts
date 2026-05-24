@@ -1,6 +1,7 @@
 import type { Id } from "../_generated/dataModel";
 import type { Doc } from "../_generated/dataModel";
 import { dayKeyFromTimestamp, datesInMonth } from "../lib/dates";
+import { addMoney } from "../lib/money";
 
 export type TableCell = {
   categoryId: Id<"categories">;
@@ -30,8 +31,8 @@ export function buildTableForMonth(
       income: 0,
       expense: 0,
     };
-    if (row.type === "income") cell.income += row.amount;
-    else if (row.type === "expense") cell.expense += row.amount;
+    if (row.type === "income") cell.income = addMoney(cell.income, row.amount);
+    else if (row.type === "expense") cell.expense = addMoney(cell.expense, row.amount);
     aggregated.set(mapKey, cell);
   }
 
@@ -42,8 +43,8 @@ export function buildSummary(rows: Doc<"transactions">[]) {
   let income = 0;
   let expense = 0;
   for (const row of rows) {
-    if (row.type === "income") income += row.amount;
-    else if (row.type === "expense") expense += row.amount;
+    if (row.type === "income") income = addMoney(income, row.amount);
+    else if (row.type === "expense") expense = addMoney(expense, row.amount);
   }
-  return { income, expense, balance: income - expense };
+  return { income, expense, balance: addMoney(income, -expense) };
 }

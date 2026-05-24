@@ -2,6 +2,12 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx, query } from "./_generated/server";
 import { getOptionalUserId, requireUserId } from "./lib/auth";
+import {
+  assertValidReorder,
+  hasCaseInsensitiveDuplicate,
+  nextOrder,
+  normalizeEntityName,
+} from "./lib/crud";
 
 export const tagDocValidator = v.object({
   _id: v.id("tags"),
@@ -32,32 +38,26 @@ export const create = mutation({
   returns: v.id("tags"),
   handler: async (ctx, { name }) => {
     const userId = await requireUserId(ctx);
-    const trimmed = name.trim();
-    if (!trimmed) {
-      throw new ConvexError("Введите название тега");
-    }
-    if (trimmed.length > 40) {
-      throw new ConvexError("Слишком длинное название");
-    }
+    const trimmed = normalizeEntityName(
+      name,
+      "Введите название тега",
+      "Слишком длинное название",
+    );
 
     const siblings = await ctx.db
       .query("tags")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    const duplicate = siblings.some(
-      (t) => t.name.toLowerCase() === trimmed.toLowerCase(),
-    );
+    const duplicate = hasCaseInsensitiveDuplicate(siblings, (t) => t.name, trimmed);
     if (duplicate) {
       throw new ConvexError("Такой тег уже есть");
     }
 
-    const maxOrder = siblings.reduce((m, t) => Math.max(m, t.order), -1);
-
     return await ctx.db.insert("tags", {
       userId,
       name: trimmed,
-      order: maxOrder + 1,
+      order: nextOrder(siblings),
     });
   },
 });
@@ -87,21 +87,22 @@ export const rename = mutation({
       throw new ConvexError("Тег не найден");
     }
 
-    const trimmed = name.trim();
-    if (!trimmed) {
-      throw new ConvexError("Введите название тега");
-    }
-    if (trimmed.length > 40) {
-      throw new ConvexError("Слишком длинное название");
-    }
+    const trimmed = normalizeEntityName(
+      name,
+      "Введите название тега",
+      "Слишком длинное название",
+    );
 
     const siblings = await ctx.db
       .query("tags")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    const duplicate = siblings.some(
-      (t) => t._id !== id && t.name.toLowerCase() === trimmed.toLowerCase(),
+    const duplicate = hasCaseInsensitiveDuplicate(
+      siblings,
+      (t) => t.name,
+      trimmed,
+      { exclude: (t) => t._id === id },
     );
     if (duplicate) {
       throw new ConvexError("Такой тег уже есть");
@@ -154,51 +155,16 @@ export const reorder = mutation({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    if (orderedIds.length !== siblings.length) {
-      throw new ConvexError("Неверный список тегов");
-    }
-
-    const idSet = new Set(siblings.map((t) => t._id));
-    for (const id of orderedIds) {
-      if (!idSet.has(id)) {
-        throw new ConvexError("Тег не найден");
-      }
-    }
+    assertValidReorder(
+      orderedIds as string[],
+      siblings as Array<{ _id: string }>,
+      "Неверный список тегов",
+      "Тег не найден",
+    );
 
     for (let i = 0; i < orderedIds.length; i++) {
       await ctx.db.patch(orderedIds[i]!, { order: i });
     }
-    return null;
-  },
-});
-
-export const move = mutation({
-  args: {
-    id: v.id("tags"),
-    direction: v.union(v.literal("up"), v.literal("down")),
-  },
-  returns: v.null(),
-  handler: async (ctx, { id, direction }) => {
-    const userId = await requireUserId(ctx);
-    const tag = await ctx.db.get(id);
-    if (tag === null || tag.userId !== userId) {
-      throw new ConvexError("Тег не найден");
-    }
-
-    const siblings = (
-      await ctx.db
-        .query("tags")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect()
-    ).sort((a, b) => a.order - b.order);
-
-    const index = siblings.findIndex((t) => t._id === id);
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= siblings.length) return null;
-
-    const other = siblings[swapIndex]!;
-    await ctx.db.patch(id, { order: other.order });
-    await ctx.db.patch(other._id, { order: tag.order });
     return null;
   },
 });

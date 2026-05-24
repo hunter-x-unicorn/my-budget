@@ -1,3 +1,5 @@
+import { formatMoney as formatMoneyImpl } from "./money";
+
 const monthFormatter = new Intl.DateTimeFormat("ru-RU", {
   month: "long",
   year: "numeric",
@@ -7,13 +9,12 @@ export function formatMonthLabel(year: number, month: number) {
   return monthFormatter.format(new Date(year, month, 1));
 }
 
-export function formatMoney(amount: number, compact = false) {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    maximumFractionDigits: compact && Math.abs(amount) >= 1000 ? 0 : 0,
-    notation: compact && Math.abs(amount) >= 10000 ? "compact" : "standard",
-  }).format(amount);
+export function formatMoney(
+  amount: number,
+  compact = false,
+  currencyCode?: string,
+) {
+  return formatMoneyImpl(amount, { compact, currencyCode });
 }
 
 export function formatTableDay(year: number, month: number, day: number) {
@@ -45,9 +46,3 @@ export function formatListTime(timestamp: number) {
   return listDateFormatter.format(new Date(timestamp));
 }
 
-export function formatCellAmount(income: number, expense: number) {
-  const parts: string[] = [];
-  if (income > 0) parts.push(`+${Math.round(income)}`);
-  if (expense > 0) parts.push(`−${Math.round(expense)}`);
-  return parts.join("\n") || "";
-}

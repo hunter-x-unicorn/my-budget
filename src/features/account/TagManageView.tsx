@@ -5,6 +5,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 import { PromptSheet } from "../../shared/ui/PromptSheet";
 import { DraggableList } from "./DraggableList";
+import { useMutationRunner } from "./useMutationRunner";
 
 type TagManageViewProps = {
   onBack: () => void;
@@ -17,18 +18,9 @@ export function TagManageView({ onBack }: TagManageViewProps) {
   const remove = useMutation(api.tags.remove);
   const reorder = useMutation(api.tags.reorder);
 
-  const [error, setError] = useState<string | null>(null);
+  const { error, run } = useMutationRunner();
   const [addOpen, setAddOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<Id<"tags"> | null>(null);
-
-  const run = async (fn: () => Promise<void>) => {
-    setError(null);
-    try {
-      await fn();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Ошибка");
-    }
-  };
 
   const deleteLabel = tags?.find((t) => t._id === deleteId)?.name ?? "";
 
@@ -62,12 +54,10 @@ export function TagManageView({ onBack }: TagManageViewProps) {
       <DraggableList
         items={tags?.map((t) => ({ id: t._id, label: t.name })) ?? []}
         onReorder={(ids) =>
-          void run(() =>
-            reorder({ orderedIds: ids as Id<"tags">[] }).then(() => {}),
-          )
+          void run(() => reorder({ orderedIds: ids as Id<"tags">[] }))
         }
         onRename={(id, name) =>
-          void run(() => rename({ id: id as Id<"tags">, name }).then(() => {}))
+          void run(() => rename({ id: id as Id<"tags">, name }))
         }
         onDelete={(id) => setDeleteId(id as Id<"tags">)}
       />
@@ -78,7 +68,11 @@ export function TagManageView({ onBack }: TagManageViewProps) {
         placeholder="Например: Жена"
         onCancel={() => setAddOpen(false)}
         onSubmit={(name) =>
-          void run(() => create({ name }).then(() => setAddOpen(false)))
+          void run(() =>
+            create({ name }).then(() => {
+              setAddOpen(false);
+            }),
+          )
         }
       />
 
@@ -93,7 +87,11 @@ export function TagManageView({ onBack }: TagManageViewProps) {
         onCancel={() => setDeleteId(null)}
         onConfirm={() => {
           if (!deleteId) return;
-          void run(() => remove({ id: deleteId }).then(() => setDeleteId(null)));
+          void run(() =>
+            remove({ id: deleteId }).then(() => {
+              setDeleteId(null);
+            }),
+          );
         }}
       />
     </div>

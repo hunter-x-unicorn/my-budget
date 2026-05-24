@@ -1,4 +1,5 @@
 import { formatMoney } from "../../../shared/lib/format";
+import { sumMoney } from "../../../shared/lib/money";
 
 export type DailyPoint = {
   date: string;
@@ -10,20 +11,20 @@ type DailyFlowChartProps = {
   points: DailyPoint[];
 };
 
-function dayLabel(iso: string) {
-  const [, , d] = iso.split("-");
-  return d ?? iso;
+/** dateKey format: YYYY-M-D (day without zero-padding) */
+function dayLabel(dateKey: string) {
+  const day = Number(dateKey.split("-")[2]);
+  return Number.isFinite(day) ? String(day) : dateKey;
 }
 
 export function DailyFlowChart({ points }: DailyFlowChartProps) {
-  if (points.length === 0) {
-    return <p className="empty-state">Нет операций за месяц</p>;
-  }
-
   const max = points.reduce(
     (m, p) => Math.max(m, p.income, p.expense),
     1,
   );
+
+  const totalIncome = sumMoney(points.map((point) => point.income));
+  const totalExpense = sumMoney(points.map((point) => point.expense));
 
   return (
     <div className="daily-flow">
@@ -55,11 +56,11 @@ export function DailyFlowChart({ points }: DailyFlowChartProps) {
       <div className="daily-flow-totals">
         <span>
           Σ доход:{" "}
-          <strong>{formatMoney(points.reduce((s, p) => s + p.income, 0))}</strong>
+          <strong>{formatMoney(totalIncome)}</strong>
         </span>
         <span>
           Σ расход:{" "}
-          <strong>{formatMoney(points.reduce((s, p) => s + p.expense, 0))}</strong>
+          <strong>{formatMoney(totalExpense)}</strong>
         </span>
       </div>
     </div>
