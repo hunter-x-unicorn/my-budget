@@ -200,7 +200,7 @@ export function TransactionForm({
           setError(null);
           const value = parseAmountInput(amount);
           if (value === null) {
-            setError("Введите сумму");
+            setError("Введите сумму, например 8 или 8,50");
             return;
           }
           if (!effectiveCurrencyId) {
@@ -264,7 +264,6 @@ export function TransactionForm({
             placeholder="0,00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            pattern="^\\d+([.,]\\d{1,2})?$"
             required
           />
         </label>
