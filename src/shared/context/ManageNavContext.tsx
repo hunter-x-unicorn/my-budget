@@ -8,7 +8,7 @@ import {
 } from "react";
 import { TAB_INDEX } from "../../app/navigation";
 
-export type AccountSubview = "currency" | "category" | "tags";
+export type AccountSubview = "currency" | "category" | "tags" | "accounts";
 
 type ManageNavContextValue = {
   subview: AccountSubview | null;

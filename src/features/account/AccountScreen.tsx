@@ -9,6 +9,7 @@ import {
 import { useTheme } from "../../shared/context/ThemeContext";
 import { CategoryManageView } from "./CategoryManageView";
 import { CurrencyManageView } from "./CurrencyManageView";
+import { AccountsManageView } from "./AccountsManageView";
 import { TagManageView } from "./TagManageView";
 
 function IconMoon() {
@@ -42,6 +43,7 @@ const SUBVIEW_VIEWS: Record<
   AccountSubview,
   ComponentType<{ onBack: () => void }>
 > = {
+  accounts: AccountsManageView,
   currency: CurrencyManageView,
   category: CategoryManageView,
   tags: TagManageView,
@@ -70,6 +72,17 @@ export function AccountScreen() {
         <button type="button" className="account-menu-row" onClick={toggleTheme}>
           {theme === "light" ? <IconSun /> : <IconMoon />}
           <span>{theme === "light" ? "Светлая тема" : "Тёмная тема"}</span>
+        </button>
+
+        <button
+          type="button"
+          className="account-menu-row"
+          onClick={() => openSubview("accounts")}
+        >
+          <span>Счета</span>
+          <span className="account-menu-chevron" aria-hidden>
+            ›
+          </span>
         </button>
 
         <button

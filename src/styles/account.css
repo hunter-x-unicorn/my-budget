@@ -202,3 +202,87 @@
   color: var(--color-expense);
   background: rgba(239, 68, 68, 0.12);
 }
+
+/* --- Money accounts (Счета) --- */
+.account-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-surface-card-border);
+}
+
+.account-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.account-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.account-card-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.35rem;
+  background: var(--color-surface-muted);
+}
+
+.account-card-balance {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-income);
+}
+
+.account-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.account-recalc-btn {
+  flex: 1;
+  min-height: 40px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.account-delete-btn {
+  flex-shrink: 0;
+}
+
+.account-recalc-sheet .form-hint {
+  margin: 0 0 0.75rem;
+}
+
+.btn-primary--full {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.btn-secondary--sm {
+  min-height: 40px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}

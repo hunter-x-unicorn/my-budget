@@ -30,6 +30,14 @@ const schema = defineSchema({
     order: v.number(),
   }).index("by_user", ["userId"]),
 
+  accounts: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    balance: v.number(),
+    order: v.number(),
+    isDefault: v.optional(v.boolean()),
+  }).index("by_user", ["userId"]),
+
   categories: defineTable({
     userId: v.id("users"),
     name: v.string(),
