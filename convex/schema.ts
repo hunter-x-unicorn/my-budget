@@ -30,13 +30,22 @@ const schema = defineSchema({
     order: v.number(),
   }).index("by_user", ["userId"]),
 
-  /** Official NBRB rates cache (dateKey + ISO letter code). */
+  /** Official NBRB rates — global cache for all users (dateKey + ISO code). */
   exchangeRates: defineTable({
     dateKey: v.string(),
     code: v.string(),
     scale: v.number(),
     rate: v.number(),
-  }).index("by_date_code", ["dateKey", "code"]),
+  })
+    .index("by_date_code", ["dateKey", "code"])
+    .index("by_date", ["dateKey"]),
+
+  /** Marks that all daily NBRB rates were stored for dateKey. */
+  exchangeRateSyncs: defineTable({
+    dateKey: v.string(),
+    syncedAt: v.number(),
+    rateCount: v.number(),
+  }).index("by_dateKey", ["dateKey"]),
 
   accounts: defineTable({
     userId: v.id("users"),

@@ -170,6 +170,10 @@
   opacity: 0.85;
 }
 
+.form-hint--warn {
+  color: var(--color-expense, #e57373);
+}
+
 .info-btn {
   flex-shrink: 0;
   width: 1.5rem;

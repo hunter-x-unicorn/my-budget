@@ -1,5 +1,5 @@
-import { useAction, useMutation, useQuery } from "convex/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useManageNav } from "../context/ManageNavContext";
@@ -61,7 +61,6 @@ export function TransactionForm({
   const createCurrency = useMutation(api.currencies.create);
   const createCategory = useMutation(api.categories.create);
   const createTag = useMutation(api.tags.create);
-  const ensureRate = useAction(api.exchangeRates.ensureRate);
 
   const baseCurrency = currencies?.[0];
 
@@ -122,21 +121,6 @@ export function TransactionForm({
         }
       : "skip",
   );
-
-  useEffect(() => {
-    if (
-      !selectedCurrency ||
-      !baseCurrency ||
-      selectedCurrency.code === baseCurrency.code
-    ) {
-      return;
-    }
-    void ensureRate({ code: selectedCurrency.code, dateKey }).catch((err: unknown) => {
-      const message =
-        err instanceof Error ? err.message : "Не удалось загрузить курс НБРБ";
-      setError((prev) => prev ?? message);
-    });
-  }, [selectedCurrency, baseCurrency, dateKey, ensureRate]);
 
   const availablePresets = CURRENCY_PRESETS.filter(
     (p) => !currencies?.some((c) => c.code === p.code),
@@ -249,29 +233,16 @@ export function TransactionForm({
           }
 
           setPending(true);
-          const submit = async () => {
-            if (
-              selectedCurrency &&
-              baseCurrency &&
-              selectedCurrency.code !== baseCurrency.code
-            ) {
-              await ensureRate({
-                code: selectedCurrency.code,
-                dateKey: dayKeyFromDateInput(date),
-              });
-            }
-            await onSubmit({
-              type,
-              amount: value,
-              categoryId: effectiveCategoryId,
-              currencyId: effectiveCurrencyId,
-              tagIds:
-                showTags && selectedTagIds.size ? [...selectedTagIds] : undefined,
-              note: note || undefined,
-              date: fromDateInputValue(date),
-            });
-          };
-          void submit()
+          void onSubmit({
+            type,
+            amount: value,
+            categoryId: effectiveCategoryId,
+            currencyId: effectiveCurrencyId,
+            tagIds:
+              showTags && selectedTagIds.size ? [...selectedTagIds] : undefined,
+            note: note || undefined,
+            date: fromDateInputValue(date),
+          })
             .catch((err: unknown) => {
               setError(err instanceof Error ? err.message : "Не удалось сохранить");
             })
@@ -330,7 +301,10 @@ export function TransactionForm({
             parsedPreviewAmount !== null &&
             parsedPreviewAmount > 0 &&
             ratePreview === null && (
-              <p className="form-hint">Загрузка курса НБРБ…</p>
+              <p className="form-hint form-hint--warn">
+                Курс на эту дату ещё не в базе. Для сегодня подождите ежедневное
+                обновление; для прошлых дней курс появится после синхронизации.
+              </p>
             )}
         </label>
 

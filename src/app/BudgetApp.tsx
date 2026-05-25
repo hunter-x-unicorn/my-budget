@@ -10,6 +10,7 @@ import { HistoryEditProvider, useHistoryEdit } from "../shared/context/HistoryEd
 import { ManageNavProvider, useManageNav } from "../shared/context/ManageNavContext";
 import { MonthProvider } from "../shared/hooks/MonthProvider";
 import { useHashTabs } from "../shared/hooks/useHashTabs";
+import { useDailyExchangeRatesSync } from "../shared/hooks/useDailyExchangeRatesSync";
 import { useSwipeTabs } from "../shared/hooks/useSwipeTabs";
 import { BottomNav } from "../shared/ui/BottomNav";
 import { TAB_COUNT, TAB_INDEX } from "./navigation";
@@ -42,6 +43,7 @@ function BudgetAppContent({
     swipe;
 
   useHashTabs(activeTab, scrollToTab);
+  useDailyExchangeRatesSync();
 
   useEffect(() => {
     void bootstrapCategories();

@@ -75,7 +75,7 @@ export async function resolveAmountBase(
   const cached = await getCachedRate(ctx, dateKey, currency.code);
   if (cached === null) {
     throw new ConvexError(
-      `Нет официального курса ${currency.code} на дату операции. Подождите загрузку курса и повторите.`,
+      `Нет курса ${currency.code} на ${dateKey} в базе. Курсы обновляются раз в день; для прошлых дат они появляются после первой синхронизации.`,
     );
   }
 
