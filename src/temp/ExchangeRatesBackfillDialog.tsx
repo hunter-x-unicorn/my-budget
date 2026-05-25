@@ -11,13 +11,21 @@ import {
 } from "./backfillDates";
 import "./backfill.css";
 
-const DELAY_MS = 120;
+const BATCH_SIZE = 6;
+const DELAY_MS = 200;
 
 type Phase = "prompt" | "running" | "done" | "error";
 
+function resultError(
+  r: { error?: string; synced: boolean; skipped: boolean },
+): string | null {
+  if (r.error) return r.error;
+  return null;
+}
+
 export function ExchangeRatesBackfillDialog() {
   const status = useQuery(api.temp.exchangeRatesBackfill.status);
-  const syncOneDay = useAction(api.temp.exchangeRatesBackfill.syncOneDay);
+  const syncBatch = useAction(api.temp.exchangeRatesBackfill.syncBatch);
 
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("prompt");
@@ -40,32 +48,45 @@ export function ExchangeRatesBackfillDialog() {
     setProgress({ current: 0, total: days.length, label: "" });
 
     let completed = 0;
+    let errorCount = 0;
 
-    for (const dateKey of days) {
+    for (let i = 0; i < days.length; i += BATCH_SIZE) {
       if (cancelRef.current) break;
 
+      const chunk = days.slice(i, i + BATCH_SIZE);
       setProgress({
         current: completed,
         total: days.length,
-        label: formatDateKeyLabel(dateKey),
+        label: formatDateKeyLabel(chunk[0]!),
       });
 
       try {
-        await syncOneDay({ dateKey });
+        const results = await syncBatch({ dateKeys: chunk });
+        for (const r of results) {
+          const err = resultError(r);
+          if (err) {
+            errorCount++;
+            setErrors(errorCount);
+            setErrorMessage(err);
+          }
+          completed++;
+        }
       } catch (err: unknown) {
-        setErrors((n) => n + 1);
-        const msg = err instanceof Error ? err.message : "Ошибка загрузки";
-        setErrorMessage(msg);
+        errorCount += chunk.length;
+        setErrors(errorCount);
+        completed += chunk.length;
+        setErrorMessage(
+          err instanceof Error ? err.message : "Ошибка пакетной загрузки",
+        );
       }
 
-      completed++;
       setProgress({
         current: completed,
         total: days.length,
-        label: formatDateKeyLabel(dateKey),
+        label: formatDateKeyLabel(chunk[chunk.length - 1]!),
       });
 
-      if (completed < days.length) {
+      if (completed < days.length && !cancelRef.current) {
         await new Promise((r) => setTimeout(r, DELAY_MS));
       }
     }
@@ -75,8 +96,13 @@ export function ExchangeRatesBackfillDialog() {
       return;
     }
 
+    if (errorCount >= days.length) {
+      setPhase("error");
+      return;
+    }
+
     setPhase("done");
-  }, [syncOneDay]);
+  }, [syncBatch]);
 
   if (!open || status === undefined) return null;
 
@@ -86,7 +112,12 @@ export function ExchangeRatesBackfillDialog() {
       : 0;
 
   return (
-    <div className="backfill-overlay" role="dialog" aria-modal="true" aria-labelledby="backfill-title">
+    <div
+      className="backfill-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="backfill-title"
+    >
       <div className="backfill-dialog">
         <h2 id="backfill-title">Курсы валют НБРБ</h2>
 
@@ -101,7 +132,11 @@ export function ExchangeRatesBackfillDialog() {
               Уже в базе: {status.synced} из {status.total}
             </p>
             <div className="backfill-actions">
-              <button type="button" className="btn-primary" onClick={() => void runBackfill()}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void runBackfill()}
+              >
                 Получить курсы
               </button>
             </div>
@@ -119,7 +154,8 @@ export function ExchangeRatesBackfillDialog() {
                 />
               </div>
               <p className="backfill-progress-label">
-                {progress.current} / {progress.total} ({percent}%) — {progress.label}
+                {progress.current} / {progress.total} ({percent}%) —{" "}
+                {progress.label}
               </p>
             </div>
             {errorMessage && <p className="backfill-error">{errorMessage}</p>}
@@ -143,11 +179,15 @@ export function ExchangeRatesBackfillDialog() {
         {phase === "done" && (
           <>
             <p>
-              Готово. Загружено {progress.total} дней
-              {errors > 0 ? `, ошибок: ${errors}` : ""}.
+              Готово. Обработано {progress.total} дней
+              {errors > 0 ? `, с ошибкой: ${errors}` : ""}.
             </p>
             <div className="backfill-actions">
-              <button type="button" className="btn-primary" onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setOpen(false)}
+              >
                 Закрыть
               </button>
             </div>
@@ -156,12 +196,24 @@ export function ExchangeRatesBackfillDialog() {
 
         {phase === "error" && (
           <>
-            <p className="backfill-error">{errorMessage ?? "Не удалось загрузить курсы"}</p>
+            <p className="backfill-error">
+              {errorMessage ??
+                "Не удалось загрузить курсы. Убедитесь, что Convex задеплоен с актуальным кодом."}
+            </p>
+            <p className="backfill-stats">Ошибок: {errors}</p>
             <div className="backfill-actions">
-              <button type="button" className="btn-primary" onClick={() => void runBackfill()}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void runBackfill()}
+              >
                 Повторить
               </button>
-              <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setOpen(false)}
+              >
                 Закрыть
               </button>
             </div>

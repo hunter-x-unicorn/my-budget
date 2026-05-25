@@ -4,9 +4,10 @@
  */
 
 import { ConvexError, v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "../_generated/api";
+import type { ActionCtx } from "../_generated/server";
 import { action, query } from "../_generated/server";
+import { fetchAllDailyRates } from "../lib/nbrb";
 import { getSyncRecord } from "../lib/exchangeSync";
 import { enumerateBackfillDateKeys } from "./backfillDates";
 
@@ -15,7 +16,67 @@ const dayResultValidator = v.object({
   synced: v.boolean(),
   skipped: v.boolean(),
   rateCount: v.number(),
+  error: v.optional(v.string()),
 });
+
+type DayResult = {
+  dateKey: string;
+  synced: boolean;
+  skipped: boolean;
+  rateCount: number;
+  error?: string;
+};
+
+/** Fetch NBRB + save to DB (no nested actions — works reliably from public action). */
+async function syncDayInAction(
+  ctx: ActionCtx,
+  dateKey: string,
+): Promise<DayResult> {
+  const existing = await ctx.runQuery(internal.exchangeRatesSync.getSyncInternal, {
+    dateKey,
+  });
+  if (existing !== null) {
+    return {
+      dateKey,
+      synced: false,
+      skipped: true,
+      rateCount: existing.rateCount,
+    };
+  }
+
+  const { dateKey: resolvedKey, rates } = await fetchAllDailyRates(dateKey);
+
+  if (resolvedKey !== dateKey) {
+    const existingResolved = await ctx.runQuery(
+      internal.exchangeRatesSync.getSyncInternal,
+      { dateKey: resolvedKey },
+    );
+    if (existingResolved !== null) {
+      return {
+        dateKey: resolvedKey,
+        synced: false,
+        skipped: true,
+        rateCount: existingResolved.rateCount,
+      };
+    }
+  }
+
+  const { rateCount } = await ctx.runMutation(
+    internal.exchangeRatesData.bulkUpsertForDay,
+    {
+      dateKey: resolvedKey,
+      rates,
+      syncedAt: Date.now(),
+    },
+  );
+
+  return {
+    dateKey: resolvedKey,
+    synced: true,
+    skipped: false,
+    rateCount,
+  };
+}
 
 export const status = query({
   args: {},
@@ -43,38 +104,52 @@ export const status = query({
 export const syncOneDay = action({
   args: { dateKey: v.string() },
   returns: dayResultValidator,
-  handler: async (ctx, { dateKey }): Promise<{
-    dateKey: string;
-    synced: boolean;
-    skipped: boolean;
-    rateCount: number;
-  }> => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) {
-      throw new ConvexError("Требуется вход");
-    }
-
-    const existing = await ctx.runQuery(internal.exchangeRatesSync.getSyncInternal, {
-      dateKey,
-    });
-    if (existing !== null) {
+  handler: async (ctx, { dateKey }): Promise<DayResult> => {
+    try {
+      return await syncDayInAction(ctx, dateKey);
+    } catch (err: unknown) {
+      const message =
+        err instanceof ConvexError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Неизвестная ошибка";
       return {
         dateKey,
         synced: false,
-        skipped: true,
-        rateCount: existing.rateCount,
+        skipped: false,
+        rateCount: 0,
+        error: message,
       };
     }
+  },
+});
 
-    const result = await ctx.runAction(internal.exchangeRatesSync.syncForDateInternal, {
-      dateKey,
-    });
-
-    return {
-      dateKey: result.dateKey,
-      synced: result.synced,
-      skipped: !result.synced,
-      rateCount: result.rateCount,
-    };
+/** Sync up to 8 days per call (fewer round-trips from the browser). */
+export const syncBatch = action({
+  args: { dateKeys: v.array(v.string()) },
+  returns: v.array(dayResultValidator),
+  handler: async (ctx, { dateKeys }): Promise<DayResult[]> => {
+    const results: DayResult[] = [];
+    for (const dateKey of dateKeys.slice(0, 8)) {
+      try {
+        results.push(await syncDayInAction(ctx, dateKey));
+      } catch (err: unknown) {
+        const message =
+          err instanceof ConvexError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Неизвестная ошибка";
+        results.push({
+          dateKey,
+          synced: false,
+          skipped: false,
+          rateCount: 0,
+          error: message,
+        });
+      }
+    }
+    return results;
   },
 });
