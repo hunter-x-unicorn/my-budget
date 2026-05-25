@@ -131,8 +131,10 @@ export function TransactionForm({
     ) {
       return;
     }
-    void ensureRate({ code: selectedCurrency.code, dateKey }).catch(() => {
-      /* preview query stays empty until rate is cached */
+    void ensureRate({ code: selectedCurrency.code, dateKey }).catch((err: unknown) => {
+      const message =
+        err instanceof Error ? err.message : "Не удалось загрузить курс НБРБ";
+      setError((prev) => prev ?? message);
     });
   }, [selectedCurrency, baseCurrency, dateKey, ensureRate]);
 
