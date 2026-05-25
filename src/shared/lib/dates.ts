@@ -22,3 +22,9 @@ export function fromDateInputValue(value: string) {
   const [y, m, d] = value.split("-").map(Number);
   return new Date(y, m - 1, d, 12, 0, 0).getTime();
 }
+
+/** Same key format as Convex `dayKeyFromTimestamp` (month 0-based). */
+export function dayKeyFromDateInput(value: string) {
+  const d = new Date(fromDateInputValue(value));
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}

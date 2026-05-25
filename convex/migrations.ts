@@ -2,6 +2,13 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { dayKeyFromTimestamp } from "./lib/dates";
+import {
+  convertToBase,
+  getBaseCurrency,
+  getCachedRate,
+} from "./lib/exchange";
+import { roundMoney } from "./lib/money";
 
 /** Legacy row shape before categoryId was required. */
 type LegacyTransaction = {
@@ -130,6 +137,61 @@ export const removeOrphanTransactions = internalMutation({
  * Link legacy rows, strip deprecated fields, remove orphans.
  * `npx convex run migrations:migrateAllCategoryFields`
  */
+/**
+ * Fill amountBase for legacy rows (uses cached NBRB rates; skips if rate missing).
+ * `npx convex run migrations:backfillAmountBase`
+ */
+export const backfillAmountBase = internalMutation({
+  args: {},
+  returns: v.object({
+    updated: v.number(),
+    skipped: v.number(),
+  }),
+  handler: async (ctx) => {
+    let updated = 0;
+    let skipped = 0;
+
+    const allTx = await ctx.db.query("transactions").collect();
+    const baseByUser = new Map<string, Awaited<ReturnType<typeof getBaseCurrency>>>();
+
+    for (const tx of allTx) {
+      if (tx.amountBase !== undefined) continue;
+
+      let base = baseByUser.get(tx.userId);
+      if (base === undefined) {
+        base = await getBaseCurrency(ctx, tx.userId);
+        baseByUser.set(tx.userId, base);
+      }
+      if (base === null) {
+        skipped++;
+        continue;
+      }
+
+      let amountBase = roundMoney(tx.amount);
+      if (tx.currencyId) {
+        const currency = await ctx.db.get(tx.currencyId);
+        if (currency && currency.code !== base.code) {
+          const cached = await getCachedRate(
+            ctx,
+            dayKeyFromTimestamp(tx.date),
+            currency.code,
+          );
+          if (cached === null) {
+            skipped++;
+            continue;
+          }
+          amountBase = convertToBase(tx.amount, cached.scale, cached.rate);
+        }
+      }
+
+      await ctx.db.patch(tx._id, { amountBase });
+      updated++;
+    }
+
+    return { updated, skipped };
+  },
+});
+
 export const migrateAllCategoryFields = internalMutation({
   args: {},
   returns: v.object({

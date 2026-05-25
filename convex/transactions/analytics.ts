@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { getOptionalUserId } from "../lib/auth";
 import { datesInMonth, dayKeyFromTimestamp, monthRange } from "../lib/dates";
+import { amountForAggregation } from "../lib/exchange";
 import { addMoney } from "../lib/money";
 import { monthArgs, summaryValidator } from "../lib/validators";
 import { buildSummary } from "./table";
@@ -69,18 +70,19 @@ export const bundle = query({
 
     for (const row of rows) {
       const dk = dayKeyFromTimestamp(row.date);
+      const value = amountForAggregation(row);
       if (row.type === "expense" && row.categoryId) {
         const name = catName.get(row.categoryId) ?? "—";
-        expenseCat.set(name, addMoney(expenseCat.get(name) ?? 0, row.amount));
-        dailyExp.set(dk, addMoney(dailyExp.get(dk) ?? 0, row.amount));
+        expenseCat.set(name, addMoney(expenseCat.get(name) ?? 0, value));
+        dailyExp.set(dk, addMoney(dailyExp.get(dk) ?? 0, value));
         for (const tagId of row.tagIds ?? []) {
           const tn = tagName.get(tagId) ?? "—";
-          expenseTag.set(tn, addMoney(expenseTag.get(tn) ?? 0, row.amount));
+          expenseTag.set(tn, addMoney(expenseTag.get(tn) ?? 0, value));
         }
       } else if (row.type === "income" && row.categoryId) {
         const name = catName.get(row.categoryId) ?? "—";
-        incomeCat.set(name, addMoney(incomeCat.get(name) ?? 0, row.amount));
-        dailyInc.set(dk, addMoney(dailyInc.get(dk) ?? 0, row.amount));
+        incomeCat.set(name, addMoney(incomeCat.get(name) ?? 0, value));
+        dailyInc.set(dk, addMoney(dailyInc.get(dk) ?? 0, value));
       }
     }
 

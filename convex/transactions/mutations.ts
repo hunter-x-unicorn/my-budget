@@ -3,6 +3,7 @@ import type { Id } from "../_generated/dataModel";
 import { mutation, type MutationCtx } from "../_generated/server";
 import { requireUserId } from "../lib/auth";
 import { dayRangeFromKey, timestampFromDayKey } from "../lib/dates";
+import { resolveAmountBase } from "../lib/exchange";
 import { roundMoney } from "../lib/money";
 import { transactionType } from "../lib/validators";
 
@@ -76,15 +77,26 @@ export const create = mutation({
     const userId = await requireUserId(ctx);
     await validateTransaction(ctx, userId, args);
 
+    const date = args.date ?? Date.now();
+    const amount = roundMoney(args.amount);
+    const amountBase = await resolveAmountBase(
+      ctx,
+      userId,
+      amount,
+      args.currencyId,
+      date,
+    );
+
     return await ctx.db.insert("transactions", {
       userId,
       type: args.type,
-      amount: roundMoney(args.amount),
+      amount,
+      amountBase,
       categoryId: args.categoryId,
       currencyId: args.currencyId,
       tagIds: args.tagIds?.length ? args.tagIds : undefined,
       note: args.note?.trim() || undefined,
-      date: args.date ?? Date.now(),
+      date,
     });
   },
 });
@@ -110,9 +122,19 @@ export const update = mutation({
 
     await validateTransaction(ctx, userId, args);
 
+    const amount = roundMoney(args.amount);
+    const amountBase = await resolveAmountBase(
+      ctx,
+      userId,
+      amount,
+      args.currencyId,
+      args.date,
+    );
+
     await ctx.db.patch(args.id, {
       type: args.type,
-      amount: roundMoney(args.amount),
+      amount,
+      amountBase,
       categoryId: args.categoryId,
       currencyId: args.currencyId,
       tagIds: args.tagIds?.length ? args.tagIds : undefined,
@@ -167,6 +189,7 @@ export const setCellAmount = mutation({
       userId,
       type: category.type,
       amount: rounded,
+      amountBase: rounded,
       categoryId,
       currencyId: defaultCurrency._id,
       date: timestampFromDayKey(dateKey),

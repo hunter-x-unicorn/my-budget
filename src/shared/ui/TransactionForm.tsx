@@ -1,15 +1,16 @@
-import { useMutation, useQuery } from "convex/react";
-import { useMemo, useRef, useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useManageNav } from "../context/ManageNavContext";
 import { CURRENCY_PRESETS } from "../lib/currencies";
 import {
+  dayKeyFromDateInput,
   fromDateInputValue,
   toDateInputValue,
   type TransactionType,
 } from "../lib/budget";
-import { parseAmountInput } from "../lib/money";
+import { formatMoney, parseAmountInput } from "../lib/money";
 import { ChipButton } from "./ChipButton";
 import { PromptSheet } from "./PromptSheet";
 import { SectionHeader } from "./SectionHeader";
@@ -60,6 +61,9 @@ export function TransactionForm({
   const createCurrency = useMutation(api.currencies.create);
   const createCategory = useMutation(api.categories.create);
   const createTag = useMutation(api.tags.create);
+  const ensureRate = useAction(api.exchangeRates.ensureRate);
+
+  const baseCurrency = currencies?.[0];
 
   const [type, setType] = useState<TransactionType>(initial?.type ?? "expense");
   const [amount, setAmount] = useState(
@@ -102,6 +106,36 @@ export function TransactionForm({
         : filteredCategories[0]?._id;
 
   const selectedCurrency = currencies?.find((c) => c._id === effectiveCurrencyId);
+  const dateKey = dayKeyFromDateInput(date);
+  const parsedPreviewAmount = parseAmountInput(amount);
+  const ratePreview = useQuery(
+    api.exchangeRates.previewBase,
+    selectedCurrency &&
+      baseCurrency &&
+      selectedCurrency.code !== baseCurrency.code &&
+      parsedPreviewAmount !== null &&
+      parsedPreviewAmount > 0
+      ? {
+          code: selectedCurrency.code,
+          dateKey,
+          amount: parsedPreviewAmount,
+        }
+      : "skip",
+  );
+
+  useEffect(() => {
+    if (
+      !selectedCurrency ||
+      !baseCurrency ||
+      selectedCurrency.code === baseCurrency.code
+    ) {
+      return;
+    }
+    void ensureRate({ code: selectedCurrency.code, dateKey }).catch(() => {
+      /* preview query stays empty until rate is cached */
+    });
+  }, [selectedCurrency, baseCurrency, dateKey, ensureRate]);
+
   const availablePresets = CURRENCY_PRESETS.filter(
     (p) => !currencies?.some((c) => c.code === p.code),
   );
@@ -213,16 +247,29 @@ export function TransactionForm({
           }
 
           setPending(true);
-          void onSubmit({
-            type,
-            amount: value,
-            categoryId: effectiveCategoryId,
-            currencyId: effectiveCurrencyId,
-            tagIds:
-              showTags && selectedTagIds.size ? [...selectedTagIds] : undefined,
-            note: note || undefined,
-            date: fromDateInputValue(date),
-          })
+          const submit = async () => {
+            if (
+              selectedCurrency &&
+              baseCurrency &&
+              selectedCurrency.code !== baseCurrency.code
+            ) {
+              await ensureRate({
+                code: selectedCurrency.code,
+                dateKey: dayKeyFromDateInput(date),
+              });
+            }
+            await onSubmit({
+              type,
+              amount: value,
+              categoryId: effectiveCategoryId,
+              currencyId: effectiveCurrencyId,
+              tagIds:
+                showTags && selectedTagIds.size ? [...selectedTagIds] : undefined,
+              note: note || undefined,
+              date: fromDateInputValue(date),
+            });
+          };
+          void submit()
             .catch((err: unknown) => {
               setError(err instanceof Error ? err.message : "Не удалось сохранить");
             })
@@ -266,6 +313,23 @@ export function TransactionForm({
             onChange={(e) => setAmount(e.target.value)}
             required
           />
+          {ratePreview && baseCurrency && selectedCurrency?.code !== baseCurrency.code && (
+            <p className="form-hint">
+              ≈ {formatMoney(ratePreview.amountBase, { currencyCode: baseCurrency.code })}{" "}
+              <span className="form-hint-muted">
+                (курс НБРБ: {ratePreview.rate} за {ratePreview.scale}{" "}
+                {selectedCurrency?.code})
+              </span>
+            </p>
+          )}
+          {selectedCurrency &&
+            baseCurrency &&
+            selectedCurrency.code !== baseCurrency.code &&
+            parsedPreviewAmount !== null &&
+            parsedPreviewAmount > 0 &&
+            ratePreview === null && (
+              <p className="form-hint">Загрузка курса НБРБ…</p>
+            )}
         </label>
 
         {type !== "transfer" && (

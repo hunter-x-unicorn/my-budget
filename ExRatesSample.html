@@ -1,0 +1,222 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript">
+        var uri = 'https://api.nbrb.by/';
+        $(function () {
+            $('#mode').change(function () {
+                $('#res').empty();
+                switch ($('#mode').val()) {
+                    case '0':
+                        $('#onDate').hide();
+                        $('#Cur').hide();
+                        $('#period').hide();
+                        break;
+                    case '1':
+                        $('#onDate').hide();
+                        $('#Cur').show();
+                        $('#period').hide();
+                        break;
+                    case '2':
+                    case '10':
+                    case '11':
+                        $('#onDate').show();
+                        $('#Cur').show();
+                        $('#period').hide();
+                        break;
+                    case '6':
+                    case '8':
+                    case '9':
+                        $('#onDate').hide();
+                        $('#Cur').show();
+                        $('#period').hide();
+                        break;                    
+		            case '3':
+                        $('#onDate').hide();
+                        $('#Cur').show();
+                        $('#period').show();
+                        break;
+                    case '4':
+                    case '5':
+                        $('#onDate').show();
+                        $('#Cur').hide();
+                        $('#period').hide();
+                        break;
+                   case '7':
+                        $('#onDate').hide();
+                        $('#Cur').hide();
+                        $('#period').hide();
+                        break;
+                };
+            });
+            $('#btn').click(function () {
+                $('#res').empty();
+                $('#btn').attr("disabled", "disabled");
+                switch ($('#mode').val()) {
+                    case '0':
+                        currencies();
+                        break;
+                    case '1':
+                        currency();
+                        break;
+                    case '2':
+                        rate(0);
+                        break;
+                    case '3':
+                        ratedyn();
+                        break;
+                    case '4':
+                        rates(0);
+                        break;
+                    case '5':
+                        rates(1);
+                        break;
+		            case '6':
+                        ratetoday(0);
+                        break;
+                    case '7':
+                        ratestoday(0);
+                        break;
+                    case '8':
+                        ratetoday(1);
+                        break;
+                    case '9':
+                        ratetoday(2);
+                        break;
+                    case '10':
+                        rate(1);
+                        break;
+                    case '11':
+                        rate(2);
+                        break;
+
+                }
+            });
+        });
+
+        function currencies() {
+            $.getJSON(uri + 'ExRates/Currencies')
+              .done(function (data) {
+                  $.each(data, function (key, item) {
+                      $('<li>', { text: JSON.stringify(item) }).appendTo($('#res'));
+                  });
+                  $('#btn').removeAttr("disabled");
+              }).error(function (err) {
+                  $('#btn').removeAttr("disabled");
+                  alert('ошибка');
+              });
+          };
+
+          function currency() {
+              $.getJSON(uri + 'ExRates/Currencies/' + $('#iCur').val())
+             .done(function (data) {
+                 $('<li>', { text: JSON.stringify(data) }).appendTo($('#res'));
+                 $('#btn').removeAttr("disabled");
+             }).error(function (err) {
+                 $('#btn').removeAttr("disabled");
+                 alert('ошибка');
+             });
+          };
+
+            function parseRuDate(s) {
+                var parts = s.split('.');
+                if (parts.length != 3) return NaN;
+
+                parts[0] = parseInt(parts[0], 10);
+                parts[1] = parseInt(parts[1], 10);
+                parts[2] = parseInt(parts[2], 10);
+
+                if (isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) return NaN;
+                if (parts[0] < 0 || parts[1] < 0 || parts[2] < 0) return NaN;
+
+                return new Date(parts[2], parts[1]-1, parts[0]);
+            };
+
+            function rates(p) {
+                $.getJSON(uri + 'ExRates/Rates', { 'onDate': parseRuDate($('#iDate').val()).toUTCString(), 'Periodicity': p })
+              .done(function (data) {
+                  $.each(data, function (key, item) {
+                      $('<li>', { text: JSON.stringify(item) }).appendTo($('#res'));
+                  });
+                  $('#btn').removeAttr("disabled");
+              }).error(function (err) {
+                  $('#btn').removeAttr("disabled");
+                  alert('ошибка');
+              });
+            };
+
+           function ratestoday(p) {
+                $.getJSON(uri + 'ExRates/Rates', {'Periodicity': p })
+              .done(function (data) {
+                  $.each(data, function (key, item) {
+                      $('<li>', { text: JSON.stringify(item) }).appendTo($('#res'));
+                  });
+                  $('#btn').removeAttr("disabled");
+              }).error(function (err) {
+                  $('#btn').removeAttr("disabled");
+                  alert('ошибка');
+              });
+            };
+            function rate(p) {
+                $.getJSON(uri + 'ExRates/Rates/' + $('#iCur').val(), { 'onDate': parseRuDate($('#iDate').val()).toUTCString(), 'ParamMode': p })
+              .done(function (data) {
+                  $('<li>', { text: JSON.stringify(data) }).appendTo($('#res'));
+                  $('#btn').removeAttr("disabled");
+              }).error(function (err) {
+                  $('#btn').removeAttr("disabled");
+                  alert('ошибка');
+              });
+            };
+
+            function ratetoday(p) {
+             $.getJSON(uri + 'ExRates/Rates/' + $('#iCur').val(), { 'ParamMode': p })
+              .done(function (data) {
+                  $('<li>', { text: JSON.stringify(data) }).appendTo($('#res'));
+                  $('#btn').removeAttr("disabled");
+              }).error(function (err) {
+                  $('#btn').removeAttr("disabled");
+                  alert('ошибка');
+              });
+            };
+              function ratedyn() {
+                  $.getJSON(uri + 'ExRates/Rates/Dynamics/' + $('#iCur').val(), { 'startDate': parseRuDate($('#ifrom').val()).toUTCString(), 'endDate': parseRuDate($('#ito').val()).toUTCString() })
+              .done(function (data) {
+                  $.each(data, function (key, item) {
+                      $('<li>', { text: JSON.stringify(item) }).appendTo($('#res'));
+                  });
+                  $('#btn').removeAttr("disabled");
+              }).error(function (err) {
+                  $('#btn').removeAttr("disabled");
+                  alert('ошибка');
+              });
+              }
+    </script></head>
+<body>
+    <p>
+        <b>API Национального банка для получения официального курса белорусского рубля по отношению
+            к иностранным валютам. Пример использования.</b></p>
+    <select id="mode">
+        <option value="0">справочник валют</option>
+        <option value="1">описание валюты</option>
+        <option value="2">курс валюты на дату</option>
+        <option value="10">курс валюты на дату по цифровому коду валюты (ИСО 4217)</option>
+        <option value="11">курс валюты на дату по буквенному коду валюты (ИСО 4217)</option>
+        <option value="6">курс валюты на сегодня</option>
+        <option value="8">курс валюты на сегодня по цифровому коду валюты (ИСО 4217)</option>
+        <option value="9">курс валюты на сегодня по буквенному коду валюты (ИСО 4217)</option>
+        <option value="3">курс валюты за период</option>
+        <option value="4">все курсы, устанавливаемые ежедневно на дату</option>
+        <option value="7">все курсы, устанавливаемые ежедневно на сегодня</option>
+        <option value="5">все курсы, устанавливаемые ежемесячно</option>
+    </select>
+    <span id="onDate" style="display: none">На дату: <input type="text" id="iDate" /></span> 
+    <span id="Cur" style="display: none">Cur_ID валюты: <input type="text" id="iCur" /></span> 
+    <span id="period" style="display: none">с: <input type="text" id="ifrom" /> по: <input type="text" id="ito" /></span>
+    <input type="button" id="btn" value="получить" />
+    <ul id="res">
+    </ul>
+</body>
+</html>

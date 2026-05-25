@@ -30,6 +30,14 @@ const schema = defineSchema({
     order: v.number(),
   }).index("by_user", ["userId"]),
 
+  /** Official NBRB rates cache (dateKey + ISO letter code). */
+  exchangeRates: defineTable({
+    dateKey: v.string(),
+    code: v.string(),
+    scale: v.number(),
+    rate: v.number(),
+  }).index("by_date_code", ["dateKey", "code"]),
+
   accounts: defineTable({
     userId: v.id("users"),
     name: v.string(),
@@ -55,6 +63,8 @@ const schema = defineSchema({
       v.literal("transfer"),
     ),
     amount: v.number(),
+    /** Amount in user's base currency (first currency by order); for analytics. */
+    amountBase: v.optional(v.number()),
     currencyId: v.optional(v.id("currencies")),
     tagIds: v.optional(v.array(v.id("tags"))),
     /** Required for new rows; legacy rows may omit until migrations run. */

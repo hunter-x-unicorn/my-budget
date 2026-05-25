@@ -32,6 +32,7 @@ export const transactionRowValidator = v.object({
   userId: v.id("users"),
   type: transactionType,
   amount: v.number(),
+  amountBase: v.optional(v.number()),
   categoryId: v.optional(v.id("categories")),
   categoryName: v.string(),
   currencyId: v.optional(v.id("currencies")),

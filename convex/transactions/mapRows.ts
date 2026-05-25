@@ -39,6 +39,7 @@ export async function enrichTransactionRows(
       userId: row.userId,
       type: row.type,
       amount: row.amount,
+      amountBase: row.amountBase,
       categoryId: row.categoryId,
       categoryName:
         row.type === "transfer"
