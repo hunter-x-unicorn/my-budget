@@ -12,6 +12,8 @@ import { MonthProvider } from "../shared/hooks/MonthProvider";
 import { useHashTabs } from "../shared/hooks/useHashTabs";
 import { useDailyExchangeRatesSync } from "../shared/hooks/useDailyExchangeRatesSync";
 import { useSwipeTabs } from "../shared/hooks/useSwipeTabs";
+/* TEMP: exchange-rates backfill — delete next line + src/temp/ + convex/temp/ */
+import { ExchangeRatesBackfillDialog } from "../temp/ExchangeRatesBackfillDialog";
 import { BottomNav } from "../shared/ui/BottomNav";
 import { TAB_COUNT, TAB_INDEX } from "./navigation";
 
@@ -77,6 +79,9 @@ function BudgetAppContent({
       {editingTx === null && (
         <BottomNav activeTab={activeTab} onSelect={handleNavSelect} />
       )}
+
+      {/* TEMP: backfill dialog */}
+      <ExchangeRatesBackfillDialog />
     </div>
   );
 }
