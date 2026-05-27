@@ -1,8 +1,8 @@
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { useMonth } from "../../shared/hooks/useMonth";
-import { addMoney } from "../../shared/lib/money";
+import { useManageNav } from "../../shared/context/ManageNavContext";
 import { MonthNavigator } from "../../shared/ui/MonthNavigator";
 import { SummaryStrip } from "../../shared/ui/SummaryStrip";
 import { BarChart } from "./charts/BarChart";
@@ -26,6 +26,7 @@ export function AnalyticsScreen() {
   const data = useQuery(api.transactions.analytics.bundle, month);
   const accounts = useQuery(api.accounts.list);
   const currencies = useQuery(api.currencies.list);
+  const { openSubview } = useManageNav();
   const [mode, setMode] = useState<ChartMode>("expense-donut");
 
   const defaultAccount =
@@ -33,21 +34,15 @@ export function AnalyticsScreen() {
   const baseCurrencyCode = currencies?.[0]?.code;
 
   const summary = data?.summary;
+  const dailyAccountBalance = data?.dailyAccountBalance ?? [];
 
-  const cumulativeBalance = useMemo(() => {
-    let run = 0;
-    return (data?.dailyBalance ?? []).map((d) => {
-      run = addMoney(run, d.income);
-      run = addMoney(run, -d.expense);
-      return run;
-    });
-  }, [data?.dailyBalance]);
+  const openAccountSettings = () => {
+    if (!defaultAccount) return;
+    openSubview("accountSettings", { accountId: defaultAccount._id });
+  };
 
-  const daysWithActivity = useMemo(
-    () =>
-      (data?.dailyBalance ?? []).filter((d) => d.income > 0 || d.expense > 0).length,
-    [data?.dailyBalance],
-  );
+  const daysWithActivity =
+    data?.dailyBalance.filter((d) => d.income > 0 || d.expense > 0).length ?? 0;
 
   return (
     <div className="tab-panel analytics-tab">
@@ -69,11 +64,30 @@ export function AnalyticsScreen() {
             : undefined
         }
         currencyCode={baseCurrencyCode}
+        onAccountClick={defaultAccount ? openAccountSettings : undefined}
       />
 
-      <section className="analytics-card analytics-card--spark">
-        <h3>Накопленный баланс за месяц</h3>
-        <Sparkline values={cumulativeBalance} stroke="var(--color-income)" />
+      <section
+        className={`analytics-card analytics-card--spark${defaultAccount ? " analytics-card--clickable" : ""}`}
+        role={defaultAccount ? "button" : undefined}
+        tabIndex={defaultAccount ? 0 : undefined}
+        onClick={defaultAccount ? openAccountSettings : undefined}
+        onKeyDown={
+          defaultAccount
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openAccountSettings();
+                }
+              }
+            : undefined
+        }
+      >
+        <h3>Текущий счёт за месяц</h3>
+        <Sparkline
+          values={dailyAccountBalance}
+          stroke="var(--color-income)"
+        />
       </section>
 
       <div className="analytics-mode-picker" role="tablist" aria-label="Тип графика">

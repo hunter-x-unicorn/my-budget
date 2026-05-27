@@ -1,5 +1,9 @@
+import type { KeyboardEvent } from "react";
 import { formatMoney } from "../lib/format";
-import { accountNeedsRecalcWarning } from "../lib/accountRecalc";
+import {
+  accountNeedsRecalcWarning,
+  accountNeverRecalculated,
+} from "../lib/accountRecalc";
 import type { MonthSummary } from "../types/budget";
 
 type AccountSummary = {
@@ -16,6 +20,7 @@ type SummaryStripProps = {
   variant?: "default" | "analytics";
   account?: AccountSummary;
   currencyCode?: string;
+  onAccountClick?: () => void;
 };
 
 export function SummaryStrip({
@@ -24,6 +29,7 @@ export function SummaryStrip({
   variant = "default",
   account,
   currencyCode,
+  onAccountClick,
 }: SummaryStripProps) {
   const isAnalytics = variant === "analytics";
   const className = [
@@ -34,18 +40,44 @@ export function SummaryStrip({
     .filter(Boolean)
     .join(" ");
 
+  const labelIsWarn =
+    isAnalytics && account
+      ? accountNeverRecalculated(account.lastRecalculatedAt)
+      : false;
   const needsWarning =
     isAnalytics && account
       ? accountNeedsRecalcWarning(account.lastRecalculatedAt)
       : false;
 
   if (isAnalytics) {
+    const accountLabel = account?.name ?? "Текущий";
     return (
       <section className={className}>
-        <article className="summary-card summary-card--account">
-          <span>{account?.name ?? "Текущий"}</span>
-          <strong>
-            {formatMoney(account?.balance ?? 0, false, currencyCode)}
+        <article
+          className={`summary-card summary-card--account${onAccountClick ? " summary-card--clickable" : ""}`}
+          {...(onAccountClick
+            ? {
+                role: "button" as const,
+                tabIndex: 0,
+                onClick: onAccountClick,
+                onKeyDown: (e: KeyboardEvent) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onAccountClick();
+                  }
+                },
+              }
+            : {})}
+        >
+          <span
+            className={[
+              "summary-card-account-label",
+              labelIsWarn ? "summary-card-label--warn" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {accountLabel}
             {needsWarning && (
               <span
                 className="summary-card-warn"
@@ -55,7 +87,8 @@ export function SummaryStrip({
                 !
               </span>
             )}
-          </strong>
+          </span>
+          <strong>{formatMoney(account?.balance ?? 0, false, currencyCode)}</strong>
         </article>
         <article className="summary-card income">
           <span>Доходы</span>
