@@ -78,6 +78,16 @@ export function SummaryStrip({
               .join(" ")}
           >
             {accountLabel}
+          </span>
+          <strong
+            className={[
+              "summary-card-account-balance",
+              labelIsWarn ? "summary-card-balance--warn" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {formatMoney(account?.balance ?? 0, false, currencyCode)}
             {needsWarning && (
               <span
                 className="summary-card-warn"
@@ -87,8 +97,7 @@ export function SummaryStrip({
                 !
               </span>
             )}
-          </span>
-          <strong>{formatMoney(account?.balance ?? 0, false, currencyCode)}</strong>
+          </strong>
         </article>
         <article className="summary-card income">
           <span>Доходы</span>

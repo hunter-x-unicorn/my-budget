@@ -65,9 +65,18 @@
   font-weight: 600;
 }
 
-.summary-card--account strong {
+.summary-card-account-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  flex-wrap: wrap;
   font-size: 0.9rem;
   color: #f0fdf4;
+}
+
+.summary-card-balance--warn {
+  color: #ef4444;
 }
 
 .summary-card-warn {
