@@ -25,7 +25,13 @@ type ChartMode = (typeof CHART_MODES)[number]["id"];
 export function AnalyticsScreen() {
   const { month } = useMonth();
   const data = useQuery(api.transactions.analytics.bundle, month);
+  const accounts = useQuery(api.accounts.list);
+  const currencies = useQuery(api.currencies.list);
   const [mode, setMode] = useState<ChartMode>("expense-donut");
+
+  const defaultAccount =
+    accounts?.find((a) => a.isDefault) ?? accounts?.[0];
+  const baseCurrencyCode = currencies?.[0]?.code;
 
   const summary = data?.summary;
   const savingsRate = useMemo(() => {
@@ -56,11 +62,23 @@ export function AnalyticsScreen() {
     <div className="tab-panel analytics-tab">
       <header className="analytics-hero">
         <h2 className="panel-title">Аналитика</h2>
-        <p className="analytics-subtitle">Сводка месяца и интерактивные графики</p>
       </header>
 
       <MonthNavigator />
-      <SummaryStrip summary={summary} />
+      <SummaryStrip
+        variant="analytics"
+        summary={summary}
+        account={
+          defaultAccount
+            ? {
+                name: defaultAccount.name,
+                balance: defaultAccount.balance,
+                lastRecalculatedAt: defaultAccount.lastRecalculatedAt,
+              }
+            : undefined
+        }
+        currencyCode={baseCurrencyCode}
+      />
 
       <div className="analytics-kpi-row">
         <article className="analytics-kpi">

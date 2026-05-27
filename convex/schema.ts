@@ -53,6 +53,8 @@ const schema = defineSchema({
     balance: v.number(),
     order: v.number(),
     isDefault: v.optional(v.boolean()),
+    /** Unix ms — set on «Перерасчёт»; absent until first recalc. */
+    lastRecalculatedAt: v.optional(v.number()),
   }).index("by_user", ["userId"]),
 
   categories: defineTable({

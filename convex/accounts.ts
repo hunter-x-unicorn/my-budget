@@ -17,6 +17,7 @@ export const accountDocValidator = v.object({
   balance: v.number(),
   order: v.number(),
   isDefault: v.optional(v.boolean()),
+  lastRecalculatedAt: v.optional(v.number()),
 });
 
 const DEFAULT_ACCOUNT_NAME = "Текущий";
@@ -110,7 +111,10 @@ export const recalculate = mutation({
       throw new ConvexError("Сумма не может быть отрицательной");
     }
 
-    await ctx.db.patch(id, { balance: roundMoney(balance) });
+    await ctx.db.patch(id, {
+      balance: roundMoney(balance),
+      lastRecalculatedAt: Date.now(),
+    });
     return null;
   },
 });
