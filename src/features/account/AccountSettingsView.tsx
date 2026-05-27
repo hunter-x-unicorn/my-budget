@@ -1,10 +1,12 @@
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { CURRENCY_PRESETS } from "../../shared/lib/currencies";
 import { parseAmountInput } from "../../shared/lib/money";
 import { ChipButton } from "../../shared/ui/ChipButton";
+import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
+import { DraggableList } from "./DraggableList";
 import { useMutationRunner } from "./useMutationRunner";
 
 type AccountSettingsViewProps = {
@@ -14,7 +16,9 @@ type AccountSettingsViewProps = {
 
 export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewProps) {
   const accounts = useQuery(api.accounts.list);
+  const currencies = useQuery(api.currencies.list);
   const [selectedId, setSelectedId] = useState<Id<"accounts"> | null>(accountId);
+  const [deleteId, setDeleteId] = useState<Id<"currencies"> | null>(null);
 
   useEffect(() => {
     if (accountId) setSelectedId(accountId);
@@ -34,7 +38,8 @@ export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewPr
 
   const saveBalances = useMutation(api.accounts.saveBalances);
   const createCurrency = useMutation(api.currencies.create);
-  const addAllFromDb = useMutation(api.currencies.addAllFromExchangeDatabase);
+  const removeCurrency = useMutation(api.currencies.remove);
+  const reorderCurrencies = useMutation(api.currencies.reorder);
   const { error, run } = useMutationRunner();
 
   const [amounts, setAmounts] = useState<Record<string, string>>({});
@@ -49,25 +54,58 @@ export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewPr
     setAmounts(next);
   }, [bundle]);
 
-  const currencies = useQuery(api.currencies.list);
+  const defaultCurrency = currencies?.[0];
+
+  const dragItems = useMemo(
+    () =>
+      currencies?.map((c, index) => ({
+        id: c._id,
+        label: `${c.symbol} ${c.code}`,
+        sublabel:
+          index === 0
+            ? `${c.name} · валюта по умолчанию`
+            : c.name,
+        trailing: (
+          <label className="field account-settings-field">
+            <span className="sr-only">Остаток {c.code}</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={amounts[c._id] ?? ""}
+              onChange={(ev) =>
+                setAmounts((prev) => ({
+                  ...prev,
+                  [c._id]: ev.target.value,
+                }))
+              }
+            />
+          </label>
+        ),
+      })) ?? [],
+    [currencies, amounts],
+  );
+
   const availablePresets = CURRENCY_PRESETS.filter(
     (p) => !currencies?.some((c) => c.code === p.code),
   );
 
+  const deleteLabel = currencies?.find((c) => c._id === deleteId);
+
   const submit = () => {
-    if (!selectedId || !bundle) return;
+    if (!selectedId || !currencies?.length) return;
     setFormError(null);
 
     const balances: { currencyId: Id<"currencies">; balance: number }[] = [];
-    for (const e of bundle.entries) {
-      const raw = amounts[e.currencyId] ?? "";
+    for (const c of currencies) {
+      const raw = amounts[c._id] ?? "";
       const value =
         raw.trim() === "" || raw.trim() === "0" ? 0 : parseAmountInput(raw);
       if (value === null) {
-        setFormError(`Некорректная сумма для ${e.code}`);
+        setFormError(`Некорректная сумма для ${c.code}`);
         return;
       }
-      balances.push({ currencyId: e.currencyId, balance: value });
+      balances.push({ currencyId: c._id, balance: value });
     }
 
     void run(() =>
@@ -85,8 +123,9 @@ export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewPr
       </header>
 
       <p className="account-editor-hint">
-        Укажите фактический остаток в каждой валюте. Итог на счёте пересчитается в
-        базовую валюту по курсу НБРБ на сегодня.
+        Перетащите валюты для изменения порядка. Верхняя —{" "}
+        <strong>{defaultCurrency?.code ?? "BYN"}</strong>, в ней показываются сводки и
+        итоги. Укажите остаток по каждой валюте для перерасчёта счёта.
       </p>
 
       {accounts && accounts.length > 1 && (
@@ -106,49 +145,20 @@ export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewPr
 
       {(error ?? formError) && <p className="error">{error ?? formError}</p>}
 
-      <ul className="account-settings-list">
-        {bundle?.entries.map((e) => (
-          <li key={e.currencyId} className="account-settings-row">
-            <div className="account-settings-row-label">
-              <strong>
-                {e.symbol} {e.code}
-              </strong>
-              <span>{e.name}</span>
-            </div>
-            <label className="field account-settings-field">
-              <span className="sr-only">Остаток {e.code}</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0"
-                value={amounts[e.currencyId] ?? ""}
-                onChange={(ev) =>
-                  setAmounts((prev) => ({
-                    ...prev,
-                    [e.currencyId]: ev.target.value,
-                  }))
-                }
-              />
-            </label>
-          </li>
-        ))}
-      </ul>
-
-      {bundle?.entries.length === 0 && (
-        <p className="empty-state">Добавьте валюты ниже</p>
-      )}
-
-      <div className="account-editor-section">
-        <button
-          type="button"
-          className="btn-secondary btn-secondary--full"
-          onClick={() =>
-            void run(() => addAllFromDb({}).then(() => undefined))
+      {currencies === undefined ? (
+        <p className="empty-state">Загрузка…</p>
+      ) : (
+        <DraggableList
+          dragHandleOnly
+          items={dragItems}
+          onReorder={(ids) =>
+            void run(() =>
+              reorderCurrencies({ orderedIds: ids as Id<"currencies">[] }),
+            )
           }
-        >
-          Добавить все валюты из базы курсов
-        </button>
-      </div>
+          onDelete={(id) => setDeleteId(id as Id<"currencies">)}
+        />
+      )}
 
       {availablePresets.length > 0 && (
         <section className="account-editor-section">
@@ -178,11 +188,30 @@ export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewPr
       <button
         type="button"
         className="btn-primary btn-primary--full"
-        disabled={!selectedId || !bundle?.entries.length}
+        disabled={!selectedId || !currencies?.length}
         onClick={() => submit()}
       >
         Сохранить перерасчёт
       </button>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Удалить валюту?"
+        message={
+          deleteLabel
+            ? `«${deleteLabel.symbol} ${deleteLabel.code}» будет удалена. Если есть операции в этой валюте, удаление невозможно.`
+            : ""
+        }
+        onCancel={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (!deleteId) return;
+          void run(() =>
+            removeCurrency({ id: deleteId }).then(() => {
+              setDeleteId(null);
+            }),
+          );
+        }}
+      />
     </div>
   );
 }

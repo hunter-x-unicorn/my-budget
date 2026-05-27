@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, type DragEvent, type ReactNode } from "react";
 
 export type DraggableItem = {
   id: string;
   label: string;
   sublabel?: string;
+  trailing?: ReactNode;
 };
 
 type DraggableListProps = {
@@ -12,6 +13,8 @@ type DraggableListProps = {
   onRename?: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   accent?: "expense" | "income" | "neutral";
+  /** When true, only the ⠿ handle starts a drag (keeps inputs clickable). */
+  dragHandleOnly?: boolean;
 };
 
 export function DraggableList({
@@ -20,6 +23,7 @@ export function DraggableList({
   onRename,
   onDelete,
   accent = "neutral",
+  dragHandleOnly = false,
 }: DraggableListProps) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -54,28 +58,62 @@ export function DraggableList({
       {items.map((item) => {
         const isDragging = dragId === item.id;
         const isOver = overId === item.id && dragId !== item.id;
+        const dragProps = {
+          onDragOver: (e: DragEvent) => {
+            e.preventDefault();
+            setOverId(item.id);
+          },
+          onDrop: (e: DragEvent) => {
+            e.preventDefault();
+            if (dragId) reorder(dragId, item.id);
+            setDragId(null);
+            setOverId(null);
+          },
+        };
+
         return (
           <li
             key={item.id}
             className={`drag-item drag-item--${accent} ${isDragging ? "drag-item--dragging" : ""} ${isOver ? "drag-item--over" : ""}`}
-            draggable
-            onDragStart={() => setDragId(item.id)}
-            onDragEnd={() => {
-              setDragId(null);
-              setOverId(null);
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setOverId(item.id);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (dragId) reorder(dragId, item.id);
-              setDragId(null);
-              setOverId(null);
-            }}
+            draggable={!dragHandleOnly}
+            onDragStart={
+              dragHandleOnly
+                ? undefined
+                : () => {
+                    setDragId(item.id);
+                  }
+            }
+            onDragEnd={
+              dragHandleOnly
+                ? undefined
+                : () => {
+                    setDragId(null);
+                    setOverId(null);
+                  }
+            }
+            {...dragProps}
           >
-            <span className="drag-handle" aria-hidden>
+            <span
+              className="drag-handle"
+              aria-hidden
+              draggable={dragHandleOnly}
+              onDragStart={
+                dragHandleOnly
+                  ? (e) => {
+                      e.stopPropagation();
+                      setDragId(item.id);
+                    }
+                  : undefined
+              }
+              onDragEnd={
+                dragHandleOnly
+                  ? () => {
+                      setDragId(null);
+                      setOverId(null);
+                    }
+                  : undefined
+              }
+            >
               ⠿
             </span>
             {editingId === item.id ? (
@@ -102,6 +140,7 @@ export function DraggableList({
                 {item.sublabel && <span className="drag-sublabel">{item.sublabel}</span>}
               </button>
             )}
+            {item.trailing}
             <button
               type="button"
               className="drag-delete"
