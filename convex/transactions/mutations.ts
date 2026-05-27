@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, type MutationCtx } from "../_generated/server";
+import { syncAccountSnapshots } from "../lib/accountSnapshots";
 import { requireUserId } from "../lib/auth";
 import { dayRangeFromKey, timestampFromDayKey } from "../lib/dates";
 import { resolveAmountBase } from "../lib/exchange";
@@ -87,7 +88,7 @@ export const create = mutation({
       date,
     );
 
-    return await ctx.db.insert("transactions", {
+    const id = await ctx.db.insert("transactions", {
       userId,
       type: args.type,
       amount,
@@ -98,6 +99,8 @@ export const create = mutation({
       note: args.note?.trim() || undefined,
       date,
     });
+    await syncAccountSnapshots(ctx, userId);
+    return id;
   },
 });
 
@@ -141,6 +144,7 @@ export const update = mutation({
       note: args.note?.trim() || undefined,
       date: args.date,
     });
+    await syncAccountSnapshots(ctx, userId);
     return null;
   },
 });
@@ -194,6 +198,7 @@ export const setCellAmount = mutation({
       currencyId: defaultCurrency._id,
       date: timestampFromDayKey(dateKey),
     });
+    await syncAccountSnapshots(ctx, userId);
     return null;
   },
 });
@@ -208,6 +213,7 @@ export const remove = mutation({
       throw new ConvexError("Операция не найдена");
     }
     await ctx.db.delete(id);
+    await syncAccountSnapshots(ctx, userId);
     return null;
   },
 });

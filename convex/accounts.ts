@@ -7,6 +7,7 @@ import {
   nextOrder,
   normalizeEntityName,
 } from "./lib/crud";
+import { syncAccountSnapshots } from "./lib/accountSnapshots";
 import { convertToBase, getCachedRate } from "./lib/exchange";
 import { todayDateKeyMinsk } from "./lib/exchangeSync";
 import { roundMoney } from "./lib/money";
@@ -47,6 +48,17 @@ export const bootstrap = mutation({
     if (existing === null) {
       await insertDefaultAccount(ctx, userId);
     }
+    return null;
+  },
+});
+
+/** Idempotent rebuild of daily account snapshots (analytics chart). */
+export const syncSnapshots = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+    await syncAccountSnapshots(ctx, userId);
     return null;
   },
 });
@@ -230,6 +242,7 @@ export const saveBalances = mutation({
       balance: totalBase,
       lastRecalculatedAt: Date.now(),
     });
+    await syncAccountSnapshots(ctx, userId);
     return null;
   },
 });

@@ -1,47 +1,12 @@
 import { v } from "convex/values";
-import type { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
+import { dailyAccountBalanceForMonth } from "../lib/accountSnapshots";
 import { getOptionalUserId } from "../lib/auth";
 import { datesInMonth, dayKeyFromTimestamp, monthRange } from "../lib/dates";
 import { amountForAggregation } from "../lib/exchange";
 import { addMoney } from "../lib/money";
 import { monthArgs, summaryValidator } from "../lib/validators";
 import { buildSummary } from "./table";
-
-function defaultAccount(accounts: Doc<"accounts">[]) {
-  return accounts.find((a) => a.isDefault) ?? accounts[0] ?? null;
-}
-
-function netForRow(row: Doc<"transactions">) {
-  const value = amountForAggregation(row);
-  return row.type === "income" ? value : -value;
-}
-
-/** Daily «текущий счёт» in base currency; flat until first recalc. */
-function buildDailyAccountBalance(
-  monthDates: string[],
-  account: Doc<"accounts"> | null,
-  dailyInc: Map<string, number>,
-  dailyExp: Map<string, number>,
-  priorNet: number,
-) {
-  const anchor = account?.balance ?? 0;
-  if (account?.lastRecalculatedAt === undefined) {
-    return monthDates.map(() => anchor);
-  }
-
-  const recalcDayKey = dayKeyFromTimestamp(account.lastRecalculatedAt);
-  let running = addMoney(anchor, priorNet);
-
-  return monthDates.map((date) => {
-    if (date < recalcDayKey) {
-      return anchor;
-    }
-    const net = addMoney(dailyInc.get(date) ?? 0, -(dailyExp.get(date) ?? 0));
-    running = addMoney(running, net);
-    return running;
-  });
-}
 
 const sliceValidator = v.object({
   name: v.string(),
@@ -80,12 +45,6 @@ export const bundle = query({
         dailyAccountBalance: flatAccount,
       };
     }
-
-    const accounts = await ctx.db
-      .query("accounts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    const account = defaultAccount(accounts);
 
     const { start, end } = monthRange(year, month);
     const rows = await ctx.db
@@ -137,33 +96,10 @@ export const bundle = query({
       expense: dailyExp.get(date) ?? 0,
     }));
 
-    let priorNet = 0;
-    const lastRecalculatedAt = account?.lastRecalculatedAt;
-    if (
-      lastRecalculatedAt !== undefined &&
-      monthDates.length > 0 &&
-      dayKeyFromTimestamp(lastRecalculatedAt) < monthDates[0]!
-    ) {
-      const priorRows = await ctx.db
-        .query("transactions")
-        .withIndex("by_user_date", (q) =>
-          q
-            .eq("userId", userId)
-            .gte("date", lastRecalculatedAt)
-            .lt("date", start),
-        )
-        .collect();
-      for (const row of priorRows) {
-        priorNet = addMoney(priorNet, netForRow(row));
-      }
-    }
-
-    const dailyAccountBalance = buildDailyAccountBalance(
+    const dailyAccountBalance = await dailyAccountBalanceForMonth(
+      ctx,
+      userId,
       monthDates,
-      account,
-      dailyInc,
-      dailyExp,
-      priorNet,
     );
 
     const toSlices = (m: Map<string, number>) =>

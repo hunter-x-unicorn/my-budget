@@ -68,6 +68,16 @@ const schema = defineSchema({
     .index("by_account", ["accountId"])
     .index("by_account_currency", ["accountId", "currencyId"]),
 
+  /** End-of-day «текущий счёт» in base currency (for analytics chart). */
+  accountDailySnapshots: defineTable({
+    userId: v.id("users"),
+    accountId: v.id("accounts"),
+    dateKey: v.string(),
+    balance: v.number(),
+  })
+    .index("by_account", ["accountId"])
+    .index("by_account_date", ["accountId", "dateKey"]),
+
   categories: defineTable({
     userId: v.id("users"),
     name: v.string(),

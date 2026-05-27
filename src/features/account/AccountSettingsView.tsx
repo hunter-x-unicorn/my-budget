@@ -150,6 +150,7 @@ export function AccountSettingsView({ onBack, accountId }: AccountSettingsViewPr
       ) : (
         <DraggableList
           dragHandleOnly
+          layout="settings"
           items={dragItems}
           onReorder={(ids) =>
             void run(() =>

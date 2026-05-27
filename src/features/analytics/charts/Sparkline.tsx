@@ -27,14 +27,18 @@ export function Sparkline({
 
   const min = Math.min(...values);
   const max = Math.max(...values);
+  const isFlat = max === min;
   const range = max - min || 1;
   const pad = 4;
   const step = (width - pad * 2) / (values.length - 1);
+  const midY = height / 2;
 
   const points = values
     .map((v, i) => {
       const x = pad + i * step;
-      const y = pad + (1 - (v - min) / range) * (height - pad * 2);
+      const y = isFlat
+        ? midY
+        : pad + (1 - (v - min) / range) * (height - pad * 2);
       return `${x},${y}`;
     })
     .join(" ");

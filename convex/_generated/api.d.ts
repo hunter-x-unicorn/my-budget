@@ -17,6 +17,7 @@ import type * as exchangeRates from "../exchangeRates.js";
 import type * as exchangeRatesData from "../exchangeRatesData.js";
 import type * as exchangeRatesSync from "../exchangeRatesSync.js";
 import type * as http from "../http.js";
+import type * as lib_accountSnapshots from "../lib/accountSnapshots.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_categories from "../lib/categories.js";
 import type * as lib_crud from "../lib/crud.js";
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   exchangeRatesData: typeof exchangeRatesData;
   exchangeRatesSync: typeof exchangeRatesSync;
   http: typeof http;
+  "lib/accountSnapshots": typeof lib_accountSnapshots;
   "lib/auth": typeof lib_auth;
   "lib/categories": typeof lib_categories;
   "lib/crud": typeof lib_crud;

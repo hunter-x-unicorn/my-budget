@@ -15,6 +15,8 @@ type DraggableListProps = {
   accent?: "expense" | "income" | "neutral";
   /** When true, only the ⠿ handle starts a drag (keeps inputs clickable). */
   dragHandleOnly?: boolean;
+  /** Grid layout for currency rows with balance input. */
+  layout?: "default" | "settings";
 };
 
 export function DraggableList({
@@ -24,6 +26,7 @@ export function DraggableList({
   onDelete,
   accent = "neutral",
   dragHandleOnly = false,
+  layout = "default",
 }: DraggableListProps) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -74,7 +77,7 @@ export function DraggableList({
         return (
           <li
             key={item.id}
-            className={`drag-item drag-item--${accent} ${isDragging ? "drag-item--dragging" : ""} ${isOver ? "drag-item--over" : ""}`}
+            className={`drag-item drag-item--${accent}${layout === "settings" ? " drag-item--settings" : ""} ${isDragging ? "drag-item--dragging" : ""} ${isOver ? "drag-item--over" : ""}`}
             draggable={!dragHandleOnly}
             onDragStart={
               dragHandleOnly

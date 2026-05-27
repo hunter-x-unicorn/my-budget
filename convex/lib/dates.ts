@@ -61,3 +61,16 @@ export function datesInMonth(year: number, month: number): string[] {
   }
   return dates;
 }
+
+/** Inclusive calendar days from startKey through endKey (same format as dayKeyFromTimestamp). */
+export function dateKeysFromTo(startKey: string, endKey: string): string[] {
+  if (startKey > endKey) return [];
+  const keys: string[] = [];
+  const cur = new Date(timestampFromDayKey(startKey));
+  const end = new Date(timestampFromDayKey(endKey));
+  while (cur.getTime() <= end.getTime()) {
+    keys.push(dayKeyFromTimestamp(cur.getTime()));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return keys;
+}
