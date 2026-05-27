@@ -50,12 +50,23 @@ const schema = defineSchema({
   accounts: defineTable({
     userId: v.id("users"),
     name: v.string(),
+    /** Total in base currency (first currency by order), from per-currency balances. */
     balance: v.number(),
     order: v.number(),
     isDefault: v.optional(v.boolean()),
     /** Unix ms — set on «Перерасчёт»; absent until first recalc. */
     lastRecalculatedAt: v.optional(v.number()),
   }).index("by_user", ["userId"]),
+
+  /** Actual balance per currency after «Перерасчёт». */
+  accountBalances: defineTable({
+    userId: v.id("users"),
+    accountId: v.id("accounts"),
+    currencyId: v.id("currencies"),
+    balance: v.number(),
+  })
+    .index("by_account", ["accountId"])
+    .index("by_account_currency", ["accountId", "currencyId"]),
 
   categories: defineTable({
     userId: v.id("users"),

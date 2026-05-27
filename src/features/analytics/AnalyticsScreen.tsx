@@ -2,7 +2,6 @@ import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { useMonth } from "../../shared/hooks/useMonth";
-import { formatMoney } from "../../shared/lib/format";
 import { addMoney } from "../../shared/lib/money";
 import { MonthNavigator } from "../../shared/ui/MonthNavigator";
 import { SummaryStrip } from "../../shared/ui/SummaryStrip";
@@ -34,11 +33,6 @@ export function AnalyticsScreen() {
   const baseCurrencyCode = currencies?.[0]?.code;
 
   const summary = data?.summary;
-  const savingsRate = useMemo(() => {
-    const inc = summary?.income ?? 0;
-    if (inc <= 0) return 0;
-    return Math.round(((inc - (summary?.expense ?? 0)) / inc) * 100);
-  }, [summary]);
 
   const cumulativeBalance = useMemo(() => {
     let run = 0;
@@ -48,9 +42,6 @@ export function AnalyticsScreen() {
       return run;
     });
   }, [data?.dailyBalance]);
-
-  const topExpense = data?.expenseByCategory[0];
-  const topTag = data?.expenseByTag[0];
 
   const daysWithActivity = useMemo(
     () =>
@@ -79,27 +70,6 @@ export function AnalyticsScreen() {
         }
         currencyCode={baseCurrencyCode}
       />
-
-      <div className="analytics-kpi-row">
-        <article className="analytics-kpi">
-          <span>Норма сбережений</span>
-          <strong className={savingsRate >= 0 ? "positive" : "negative"}>
-            {savingsRate}%
-          </strong>
-        </article>
-        <article className="analytics-kpi">
-          <span>Топ расход</span>
-          <strong>{topExpense?.name ?? "—"}</strong>
-          {topExpense && (
-            <small>{formatMoney(topExpense.value, true)}</small>
-          )}
-        </article>
-        <article className="analytics-kpi">
-          <span>Топ тег</span>
-          <strong>{topTag?.name ?? "—"}</strong>
-          {topTag && <small>{formatMoney(topTag.value, true)}</small>}
-        </article>
-      </div>
 
       <section className="analytics-card analytics-card--spark">
         <h3>Накопленный баланс за месяц</h3>

@@ -1,14 +1,11 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import type { ComponentType } from "react";
 import { api } from "../../../convex/_generated/api";
-import {
-  useManageNav,
-  type AccountSubview,
-} from "../../shared/context/ManageNavContext";
+import { useManageNav } from "../../shared/context/ManageNavContext";
 import { useTheme } from "../../shared/context/ThemeContext";
 import { CategoryManageView } from "./CategoryManageView";
-import { CurrencyManageView } from "./CurrencyManageView";
+import { AccountSettingsView } from "./AccountSettingsView";
+import { CurrencyRatesView } from "./CurrencyRatesView";
 import { AccountsManageView } from "./AccountsManageView";
 import { TagManageView } from "./TagManageView";
 
@@ -39,27 +36,25 @@ function IconSun() {
   );
 }
 
-const SUBVIEW_VIEWS: Record<
-  AccountSubview,
-  ComponentType<{ onBack: () => void }>
-> = {
-  accounts: AccountsManageView,
-  currency: CurrencyManageView,
-  category: CategoryManageView,
-  tags: TagManageView,
-};
-
 export function AccountScreen() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.current);
-  const { subview, openSubview, closeSubview } = useManageNav();
+  const { subview, settingsAccountId, openSubview, closeSubview } = useManageNav();
   const { theme, toggleTheme } = useTheme();
 
   if (subview !== null) {
-    const View = SUBVIEW_VIEWS[subview];
     return (
       <div className="tab-panel account-tab">
-        <View onBack={closeSubview} />
+        {subview === "accounts" && <AccountsManageView onBack={closeSubview} />}
+        {subview === "currency" && <CurrencyRatesView onBack={closeSubview} />}
+        {subview === "accountSettings" && (
+          <AccountSettingsView
+            onBack={closeSubview}
+            accountId={settingsAccountId}
+          />
+        )}
+        {subview === "category" && <CategoryManageView onBack={closeSubview} />}
+        {subview === "tags" && <TagManageView onBack={closeSubview} />}
       </div>
     );
   }

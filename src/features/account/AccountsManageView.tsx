@@ -2,8 +2,8 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useManageNav } from "../../shared/context/ManageNavContext";
 import { formatMoney } from "../../shared/lib/format";
-import { parseAmountInput } from "../../shared/lib/money";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 import { PromptSheet } from "../../shared/ui/PromptSheet";
 import { useMutationRunner } from "./useMutationRunner";
@@ -13,42 +13,18 @@ type AccountsManageViewProps = {
 };
 
 export function AccountsManageView({ onBack }: AccountsManageViewProps) {
+  const { openSubview } = useManageNav();
   const accounts = useQuery(api.accounts.list);
   const currencies = useQuery(api.currencies.list);
   const create = useMutation(api.accounts.create);
-  const recalculate = useMutation(api.accounts.recalculate);
   const remove = useMutation(api.accounts.remove);
 
   const { error, run } = useMutationRunner();
-  const [formError, setFormError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
-  const [recalcId, setRecalcId] = useState<Id<"accounts"> | null>(null);
-  const [recalcAmount, setRecalcAmount] = useState("");
   const [deleteId, setDeleteId] = useState<Id<"accounts"> | null>(null);
 
   const defaultCurrencyCode = currencies?.[0]?.code;
-
-  const recalcAccount = accounts?.find((a) => a._id === recalcId);
   const deleteAccount = accounts?.find((a) => a._id === deleteId);
-
-  const submitRecalc = () => {
-    if (!recalcId) return;
-    const value =
-      recalcAmount.trim() === "" || recalcAmount.trim() === "0"
-        ? 0
-        : parseAmountInput(recalcAmount);
-    if (value === null) {
-      setFormError("Введите сумму, например 0 или 1250,50");
-      return;
-    }
-    setFormError(null);
-    void run(() =>
-      recalculate({ id: recalcId, balance: value }).then(() => {
-        setRecalcId(null);
-        setRecalcAmount("");
-      }),
-    );
-  };
 
   return (
     <div className="account-editor">
@@ -60,11 +36,11 @@ export function AccountsManageView({ onBack }: AccountsManageViewProps) {
       </header>
 
       <p className="account-editor-hint">
-        Счёт «Текущий» создаётся автоматически. Перерасчёт задаёт фактический остаток
-        денег на счёте (например, после сверки с банком или кошельком).
+        Счёт «Текущий» создаётся автоматически. Перерасчёт открывает настройку
+        остатков по валютам.
       </p>
 
-      {(error ?? formError) && <p className="error">{error ?? formError}</p>}
+      {error && <p className="error">{error}</p>}
 
       <ul className="account-list">
         {accounts?.map((account) => (
@@ -84,12 +60,9 @@ export function AccountsManageView({ onBack }: AccountsManageViewProps) {
               <button
                 type="button"
                 className="btn-secondary btn-secondary--sm account-recalc-btn"
-                onClick={() => {
-                  setRecalcId(account._id);
-                  setRecalcAmount(
-                    account.balance > 0 ? String(account.balance) : "",
-                  );
-                }}
+                onClick={() =>
+                  openSubview("accountSettings", { accountId: account._id })
+                }
               >
                 Перерасчёт
               </button>
@@ -131,66 +104,6 @@ export function AccountsManageView({ onBack }: AccountsManageViewProps) {
           )
         }
       />
-
-      {recalcId !== null && (
-        <div
-          className="confirm-overlay"
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setRecalcId(null);
-              setRecalcAmount("");
-            }
-          }}
-        >
-          <div
-            className="confirm-sheet prompt-sheet account-recalc-sheet"
-            role="dialog"
-            aria-modal="true"
-          >
-            <h3 className="confirm-title">Перерасчёт — {recalcAccount?.name}</h3>
-            <p className="form-hint">
-              Укажите фактический остаток на счёте сейчас. Можно ввести 8, 8,5 или 8,55.
-            </p>
-            <label className="field prompt-field">
-              <span>Остаток</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0"
-                value={recalcAmount}
-                autoFocus
-                onChange={(e) => setRecalcAmount(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    submitRecalc();
-                  }
-                }}
-              />
-            </label>
-            <div className="confirm-actions">
-              <button
-                type="button"
-                className="btn-secondary confirm-btn"
-                onClick={() => {
-                  setRecalcId(null);
-                  setRecalcAmount("");
-                }}
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                className="btn-primary confirm-btn"
-                onClick={() => submitRecalc()}
-              >
-                Сохранить
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <ConfirmDialog
         open={deleteId !== null}

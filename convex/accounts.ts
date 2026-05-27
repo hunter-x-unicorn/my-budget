@@ -7,6 +7,8 @@ import {
   nextOrder,
   normalizeEntityName,
 } from "./lib/crud";
+import { convertToBase, getCachedRate } from "./lib/exchange";
+import { todayDateKeyMinsk } from "./lib/exchangeSync";
 import { roundMoney } from "./lib/money";
 
 export const accountDocValidator = v.object({
@@ -94,25 +96,138 @@ export const create = mutation({
   },
 });
 
-/** Set actual balance (перерасчёт). */
-export const recalculate = mutation({
-  args: {
-    id: v.id("accounts"),
-    balance: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, { id, balance }) => {
-    const userId = await requireUserId(ctx);
-    const account = await ctx.db.get(id);
+const balanceEntryValidator = v.object({
+  currencyId: v.id("currencies"),
+  code: v.string(),
+  symbol: v.string(),
+  name: v.string(),
+  balance: v.number(),
+});
+
+/** Per-currency balances for «Настройка счёта». */
+export const settingsBundle = query({
+  args: { accountId: v.id("accounts") },
+  returns: v.object({
+    accountId: v.id("accounts"),
+    accountName: v.string(),
+    entries: v.array(balanceEntryValidator),
+  }),
+  handler: async (ctx, { accountId }) => {
+    const userId = await getOptionalUserId(ctx);
+    if (userId === null) {
+      return { accountId, accountName: "", entries: [] };
+    }
+
+    const account = await ctx.db.get(accountId);
     if (account === null || account.userId !== userId) {
       throw new ConvexError("Счёт не найден");
     }
-    if (balance < 0) {
-      throw new ConvexError("Сумма не может быть отрицательной");
+
+    const currencies = await ctx.db
+      .query("currencies")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const stored = await ctx.db
+      .query("accountBalances")
+      .withIndex("by_account", (q) => q.eq("accountId", accountId))
+      .collect();
+    const byCurrency = new Map(stored.map((r) => [r.currencyId, r.balance]));
+
+    const entries = currencies
+      .sort((a, b) => a.order - b.order)
+      .map((c) => ({
+        currencyId: c._id,
+        code: c.code,
+        symbol: c.symbol,
+        name: c.name,
+        balance: byCurrency.get(c._id) ?? 0,
+      }));
+
+    return {
+      accountId,
+      accountName: account.name,
+      entries,
+    };
+  },
+});
+
+/** Перерасчёт: остаток в каждой валюте → сумма в базовой валюте на счёте. */
+export const saveBalances = mutation({
+  args: {
+    accountId: v.id("accounts"),
+    balances: v.array(
+      v.object({
+        currencyId: v.id("currencies"),
+        balance: v.number(),
+      }),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, { accountId, balances }) => {
+    const userId = await requireUserId(ctx);
+    const account = await ctx.db.get(accountId);
+    if (account === null || account.userId !== userId) {
+      throw new ConvexError("Счёт не найден");
     }
 
-    await ctx.db.patch(id, {
-      balance: roundMoney(balance),
+    const currencies = await ctx.db
+      .query("currencies")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const base = currencies.sort((a, b) => a.order - b.order)[0];
+    if (base === undefined) {
+      throw new ConvexError("Добавьте валюту");
+    }
+
+    const dateKey = todayDateKeyMinsk();
+    let totalBase = 0;
+
+    for (const row of balances) {
+      if (row.balance < 0) {
+        throw new ConvexError("Сумма не может быть отрицательной");
+      }
+      const currency = currencies.find((c) => c._id === row.currencyId);
+      if (currency === undefined) {
+        throw new ConvexError("Валюта не найдена");
+      }
+
+      const rounded = roundMoney(row.balance);
+      const existing = await ctx.db
+        .query("accountBalances")
+        .withIndex("by_account_currency", (q) =>
+          q.eq("accountId", accountId).eq("currencyId", row.currencyId),
+        )
+        .unique();
+
+      if (existing !== null) {
+        await ctx.db.patch(existing._id, { balance: rounded });
+      } else {
+        await ctx.db.insert("accountBalances", {
+          userId,
+          accountId,
+          currencyId: row.currencyId,
+          balance: rounded,
+        });
+      }
+
+      if (currency.code === base.code) {
+        totalBase = roundMoney(totalBase + rounded);
+      } else {
+        const rate = await getCachedRate(ctx, dateKey, currency.code);
+        if (rate === null) {
+          throw new ConvexError(
+            `Нет курса ${currency.code} на сегодня. Откройте «Валюта» после синхронизации курсов.`,
+          );
+        }
+        totalBase = roundMoney(
+          totalBase + convertToBase(rounded, rate.scale, rate.rate),
+        );
+      }
+    }
+
+    await ctx.db.patch(accountId, {
+      balance: totalBase,
       lastRecalculatedAt: Date.now(),
     });
     return null;
@@ -139,6 +254,14 @@ export const remove = mutation({
 
     if (siblings.length <= 1) {
       throw new ConvexError("Нельзя удалить последний счёт");
+    }
+
+    const balanceRows = await ctx.db
+      .query("accountBalances")
+      .withIndex("by_account", (q) => q.eq("accountId", id))
+      .collect();
+    for (const row of balanceRows) {
+      await ctx.db.delete(row._id);
     }
 
     await ctx.db.delete(id);

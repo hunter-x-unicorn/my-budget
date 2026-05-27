@@ -252,7 +252,7 @@ export function TransactionForm({
         <div className="form-section">
           <SectionHeader
             label="Валюта"
-            onReorder={() => openSubview("currency", { navigate: true })}
+            onReorder={() => openSubview("accountSettings", { navigate: true })}
           />
           <div className="chip-row chip-row--currency">
             {currencies?.map((c) => (

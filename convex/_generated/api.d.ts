@@ -20,6 +20,7 @@ import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_categories from "../lib/categories.js";
 import type * as lib_crud from "../lib/crud.js";
+import type * as lib_currencyPresets from "../lib/currencyPresets.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_exchange from "../lib/exchange.js";
 import type * as lib_exchangeSync from "../lib/exchangeSync.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/categories": typeof lib_categories;
   "lib/crud": typeof lib_crud;
+  "lib/currencyPresets": typeof lib_currencyPresets;
   "lib/dates": typeof lib_dates;
   "lib/exchange": typeof lib_exchange;
   "lib/exchangeSync": typeof lib_exchangeSync;

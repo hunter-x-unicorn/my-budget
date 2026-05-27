@@ -3,6 +3,8 @@ import type { Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx, query } from "./_generated/server";
 import { getOptionalUserId, requireUserId } from "./lib/auth";
 import { assertValidReorder, nextOrder } from "./lib/crud";
+import { presetForCode } from "./lib/currencyPresets";
+import { getSyncRecord, todayDateKeyMinsk } from "./lib/exchangeSync";
 
 export const currencyDocValidator = v.object({
   _id: v.id("currencies"),
@@ -152,6 +154,60 @@ export const remove = mutation({
       await ctx.db.patch(sorted[i]!._id, { order: i });
     }
     return null;
+  },
+});
+
+/** Add every currency that has NBRB rates in the global DB. */
+export const addAllFromExchangeDatabase = mutation({
+  args: {},
+  returns: v.object({ added: v.number(), skipped: v.number() }),
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+
+    let dateKey = todayDateKeyMinsk();
+    const syncToday = await getSyncRecord(ctx, dateKey);
+    if (syncToday === null) {
+      const latest = await ctx.db.query("exchangeRateSyncs").order("desc").first();
+      if (latest === null) {
+        throw new ConvexError(
+          "В базе ещё нет курсов. Сначала загрузите курсы НБРБ.",
+        );
+      }
+      dateKey = latest.dateKey;
+    }
+
+    const rateRows = await ctx.db
+      .query("exchangeRates")
+      .withIndex("by_date", (q) => q.eq("dateKey", dateKey))
+      .collect();
+
+    const siblings = await ctx.db
+      .query("currencies")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const existingCodes = new Set(siblings.map((c) => c.code));
+
+    let added = 0;
+    let skipped = 0;
+
+    for (const row of rateRows) {
+      if (existingCodes.has(row.code)) {
+        skipped++;
+        continue;
+      }
+      const preset = presetForCode(row.code);
+      await ctx.db.insert("currencies", {
+        userId,
+        code: preset.code,
+        name: preset.name,
+        symbol: preset.symbol,
+        order: nextOrder(siblings) + added,
+      });
+      existingCodes.add(row.code);
+      added++;
+    }
+
+    return { added, skipped };
   },
 });
 
